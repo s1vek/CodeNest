@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeNest</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>CodeNest</h1>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Login sekce -->
+        <div id="loginSection" class="login-form">
+            <h2>Přihlášení</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">GitHub uživatelské jméno:</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="token">GitHub Personal Access Token:</label>
+                    <input type="password" id="token" required>
+                </div>
+                <button type="submit">Přihlásit se</button>
+            </form>
+        </div>
+
+        <!-- Hlavní sekce -->
+        <div id="mainSection" class="hidden">
+            <!-- Výběr repozitáře -->
+            <div class="repo-select">
+                <h2>Vyberte repozitář</h2>
+                <div class="form-group">
+                    <select id="repoSelect">
+                        <option value="">Načítání repozitářů...</option>
+                    </select>
+                    <button id="refreshRepos">Obnovit seznam</button>
+                </div>
+            </div>
+
+            <!-- Nahrání souboru -->
+            <div class="file-upload">
+                <h2>Nahrát soubor</h2>
+                <div class="guide-step">
+                    <p>1. Vyberte soubor, který chcete přidat do repozitáře</p>
+                </div>
+                <form id="fileUploadForm">
+                    <div class="form-group">
+                        <input type="file" id="fileInput" multiple>
+                    </div>
+                    <div id="fileList" class="file-list"></div>
+                    <button type="submit">Nahrát soubory</button>
+                </form>
+            </div>
+
+            <!-- Vytvoření commitu -->
+            <div class="commit-form">
+                <h2>Vytvořit commit</h2>
+                <div class="guide-step">
+                    <p>2. Zadejte popis změn a vytvořte commit</p>
+                </div>
+                <form id="commitForm">
+                    <div class="form-group">
+                        <label for="commitMessage">Popis commitu:</label>
+                        <input type="text" id="commitMessage" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="branchName">Větev:</label>
+                        <select id="branchSelect">
+                            <option value="main">main</option>
+                        </select>
+                        <input type="text" id="newBranchName" placeholder="Nebo vytvořte novou větev" class="hidden">
+                    </div>
+                    <button type="submit">Vytvořit commit</button>
+                </form>
+            </div>
+
+            <!-- Vizualizace větví a commitů -->
+            <div class="branch-visualization">
+                <h2>Historie commitů</h2>
+                <div class="branch-tree" id="branchTree"></div>
+            </div>
+
+            <!-- Historie commitů -->
+            <div class="commit-history">
+                <h2>Historie commitů</h2>
+                <div id="commitList"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/auth.js"></script>
+    <script src="js/repositories.js"></script>
+    <script src="js/commits.js"></script>
+    <script src="js/visualization.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
