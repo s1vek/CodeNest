@@ -7,17 +7,31 @@ class CommitManager {
     async createCommit(files, message, branch) {
         try {
             const repo = this.repoManager.currentRepo;
-            if (!repo) throw new Error('No repository selected');
+            if (!repo) {
+                throw new Error('Není vybrán žádný repozitář');
+            }
 
-            // 1. Get the latest commit SHA
+            // Přidáno logování pro debugování
+            console.log('Začínám nahrávání:', {
+                repo: repo.name,
+                branch: branch,
+                filesCount: files.length
+            });
+
+            // 1. Nejdřív získáme referenci aktuální větve
             const refResponse = await fetch(
-                `https://api.github.com/repos/${repo.name}/git/refs/heads/${branch}`,
+                `https://api.github.com/repos/${repo.name}/git/ref/heads/${branch}`,
                 { headers: this.auth.getHeaders() }
             );
+            
+            if (!refResponse.ok) {
+                throw new Error(`Nepodařilo se získat referenci větve: ${refResponse.status}`);
+            }
+            
             const refData = await refResponse.json();
             const latestCommitSha = refData.object.sha;
 
-            // 2. Create blobs for each file
+            // 2. Pro každý soubor vytvoříme blob
             const fileBlobs = await Promise.all(files.map(async file => {
                 const content = await this.readFileAsBase64(file);
                 const blobResponse = await fetch(
@@ -31,7 +45,14 @@ class CommitManager {
                         })
                     }
                 );
+                
+                if (!blobResponse.ok) {
+                    throw new Error(`Nepodařilo se vytvořit blob pro soubor ${file.name}`);
+                }
+                
                 const blobData = await blobResponse.json();
+                console.log(`Blob vytvořen pro ${file.name}:`, blobData.sha);
+                
                 return {
                     path: file.name,
                     mode: '100644',
@@ -40,7 +61,7 @@ class CommitManager {
                 };
             }));
 
-            // 3. Create a tree
+            // 3. Vytvoříme nový tree
             const treeResponse = await fetch(
                 `https://api.github.com/repos/${repo.name}/git/trees`,
                 {
@@ -52,9 +73,14 @@ class CommitManager {
                     })
                 }
             );
+            
+            if (!treeResponse.ok) {
+                throw new Error('Nepodařilo se vytvořit tree');
+            }
+            
             const treeData = await treeResponse.json();
 
-            // 4. Create a commit
+            // 4. Vytvoříme nový commit
             const commitResponse = await fetch(
                 `https://api.github.com/repos/${repo.name}/git/commits`,
                 {
@@ -67,10 +93,15 @@ class CommitManager {
                     })
                 }
             );
+            
+            if (!commitResponse.ok) {
+                throw new Error('Nepodařilo se vytvořit commit');
+            }
+            
             const commitData = await commitResponse.json();
 
-            // 5. Update the reference
-            await fetch(
+            // 5. Aktualizujeme referenci větve
+            const updateRefResponse = await fetch(
                 `https://api.github.com/repos/${repo.name}/git/refs/heads/${branch}`,
                 {
                     method: 'PATCH',
@@ -81,10 +112,16 @@ class CommitManager {
                     })
                 }
             );
+            
+            if (!updateRefResponse.ok) {
+                throw new Error('Nepodařilo se aktualizovat referenci větve');
+            }
 
+            console.log('Commit úspěšně vytvořen:', commitData.sha);
             return commitData;
+
         } catch (error) {
-            console.error('Error creating commit:', error);
+            console.error('Chyba při vytváření commitu:', error);
             throw error;
         }
     }
@@ -93,35 +130,12 @@ class CommitManager {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => {
-                const content = reader.result.split(',')[1];
-                resolve(content);
+                // Odstraníme prefix data URL a získáme čistý base64
+                const base64 = reader.result.split(',')[1];
+                resolve(base64);
             };
-            reader.onerror = reject;
+            reader.onerror = () => reject(new Error('Nepodařilo se přečíst soubor'));
             reader.readAsDataURL(file);
         });
-    }
-
-    async getCommitHistory(repoName, branch) {
-        try {
-            const response = await fetch(
-                `https://api.github.com/repos/${repoName}/commits?sha=${branch}`,
-                { headers: this.auth.getHeaders() }
-            );
-            
-            if (response.ok) {
-                const commits = await response.json();
-                return commits.map(commit => ({
-                    sha: commit.sha,
-                    message: commit.commit.message,
-                    author: commit.commit.author.name,
-                    date: commit.commit.author.date,
-                    url: commit.html_url
-                }));
-            }
-            throw new Error('Failed to fetch commit history');
-        } catch (error) {
-            console.error('Error fetching commit history:', error);
-            throw error;
-        }
     }
 }
