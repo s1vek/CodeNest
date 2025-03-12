@@ -6,26 +6,37 @@
     <title>CodeNest</title>
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/style.css">
+    <meta name="description" content="Moderní webová aplikace pro správu Git repozitářů">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body>
     <header class="header">
         <div class="container">
             <h1>CodeNest</h1>
+            <div class="header-actions">
+                <div id="userInfo" class="user-info hidden">
+                    <span id="username"></span>
+                </div>
+                <button id="logoutBtn" class="logout-btn hidden">Odhlásit se</button>
+                </button>
+            </div>
         </div>
     </header>
 
     <main class="container">
         <!-- Login sekce -->
         <div id="loginSection" class="login-form">
-            <h2>Přihlášení</h2>
+            <h2>Přihlášení do GitHub</h2>
             <form id="loginForm">
                 <div class="form-group">
                     <label for="username">GitHub uživatelské jméno:</label>
-                    <input type="text" id="username" required>
+                    <input type="text" id="username" required placeholder="např. johndoe">
+                    <p class="input-help">Zadejte své GitHub uživatelské jméno (ne e-mail)</p>
                 </div>
                 <div class="form-group">
                     <label for="token">GitHub Personal Access Token:</label>
-                    <input type="password" id="token" required>
+                    <input type="password" id="token" required placeholder="ghp_xxxxxxxxxxxxxxxx">
+                    <p class="input-help">Potřebujete token s oprávněním pro repo. <a href="https://github.com/settings/tokens/new" target="_blank">Vytvořit token</a></p>
                 </div>
                 <button type="submit">Přihlásit se</button>
             </form>
@@ -35,99 +46,181 @@
         <div id="mainSection" class="hidden">
             <!-- Výběr repozitáře -->
             <div class="repo-select">
-                <h2>Vyberte repozitář</h2>
+                <h2>Výběr repozitáře</h2>
                 <div class="form-group">
                     <select id="repoSelect">
                         <option value="">Načítání repozitářů...</option>
                     </select>
-                    <button id="refreshRepos">Obnovit seznam</button>
+                    <button id="refreshRepos">Obnovit</button>
                 </div>
             </div>
 
-            <!-- Nahrání souboru -->
-            <div class="file-upload">
-                <h2>Nahrát soubor</h2>
-                <div class="guide-step">
-                    <p>1. Vyberte soubor, který chcete přidat do repozitáře</p>
+            <!-- Tabs navigace -->
+            <div class="tabs-container">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="files">Soubory</button>
+                    <button class="tab-btn" data-tab="pullrequests">Pull Requesty</button>
+                    <button class="tab-btn" data-tab="diff">Porovnání změn</button>
                 </div>
-                <form id="fileUploadForm">
-                    <div class="form-group">
-                        <input type="file" id="fileInput" multiple>
-                    </div>
-                    <div id="fileList" class="file-list"></div>
-                    <button type="submit">Nahrát soubory</button>
-                </form>
-            </div>
-
-            <!-- Vytvoření commitu -->
-            <div class="commit-form">
-                <h2>Vytvořit commit</h2>
-                <div class="guide-step">
-                    <p>2. Zadejte popis změn a vytvořte commit</p>
-                </div>
-                <form id="commitForm">
-                    <div class="form-group">
-                        <label for="commitMessage">Popis commitu:</label>
-                        <input type="text" id="commitMessage" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="branchName">Větev:</label>
-                        <select id="branchSelect">
-                            <option value="main">main</option>
-                        </select>
-                        <input type="text" id="newBranchName" placeholder="Nebo vytvořte novou větev" class="hidden">
-                    </div>
-                    <button type="submit">Vytvořit commit</button>
-                </form>
-            </div>
-
-            <!-- Historie commitů -->
-            <div class="commit-history">
-                <h2>Historie commitů</h2>
-                <div id="commitList"></div>
-            </div>
-
-            <div class="diff-viewer-section">
-                <h2>Porovnání změn</h2>
-                <div class="diff-viewer">
-                    <div class="diff-controls">
-                        <div class="branch-select">
-                            <div class="form-group">
-                                <label>Původní větev:</label>
-                                <select id="sourceBranch" class="branch-dropdown">
-                                    <option value="main">main</option>
-                                </select>
+                
+                <div class="tab-content">
+                    <!-- Tab 1: Soubory -->
+                    <div class="tab-pane active" id="files-tab">
+                        <!-- Nahrání souboru -->
+                        <div class="file-upload">
+                            <h2>Nahrání souborů</h2>
+                            <div class="guide-step">
+                                <p>Vyberte soubor, který chcete přidat do repozitáře</p>
                             </div>
-                            <div class="form-group">
-                                <label>Porovnávaná větev:</label>
-                                <select id="targetBranch" class="branch-dropdown">
-                                    <option value="main">main</option>
-                                </select>
+                            <form id="fileUploadForm">
+                                <div class="form-group">
+                                    <input type="file" id="fileInput" multiple>
+                                </div>
+                                <div id="fileList" class="file-list"></div>
+                            </form>
+                        </div>
+
+                        <!-- Vytvoření commitu -->
+                        <div class="commit-form">
+                            <h2>Vytvoření commitu</h2>
+                            <div class="guide-step">
+                                <p>Zadejte popis změn a vytvořte commit</p>
+                            </div>
+                            <form id="commitForm">
+                                <div class="form-group">
+                                    <label for="commitMessage">Popis commitu:</label>
+                                    <input type="text" id="commitMessage" required placeholder="např. Přidány nové funkce">
+                                </div>
+                                <div class="form-group">
+                                    <label for="branchSelect">Větev:</label>
+                                    <div class="branch-select-container">
+                                        <select id="branchSelect">
+                                            <option value="main">main</option>
+                                        </select>
+                                        <button type="button" id="newBranchBtn" class="secondary-btn">Nová větev</button>
+                                    </div>
+                                    <div id="newBranchContainer" class="hidden">
+                                        <input type="text" id="newBranchName" placeholder="Název nové větve">
+                                    </div>
+                                </div>
+                                <button type="submit">Vytvořit commit</button>
+                            </form>
+                        </div>
+
+                        <!-- Historie commitů -->
+                        <div class="commit-history">
+                            <h2>Historie commitů</h2>
+                            <div id="commitList" class="commit-list">
+                                <div class="loading">Načítání commitů...</div>
                             </div>
                         </div>
-                        <div class="file-select">
-                            <div class="form-group">
-                                <label>Vyberte soubor:</label>
-                                <input type="file" id="fileSelect">
+                    </div>
+
+                    <!-- Tab 2: Pull Requesty -->
+                    <div class="tab-pane" id="pullrequests-tab">
+                        <div class="pull-requests-section">
+                            <div class="section-header">
+                                <h2>Pull Requesty</h2>
+                                <button id="createPrBtn">Nový Pull Request</button>
                             </div>
-                            <button id="compareBranches" class="compare-btn">Porovnat</button>
+                            
+                            <!-- Formulář pro vytvoření PR - skrytý ve výchozím stavu -->
+                            <div id="createPrForm" class="create-pr-form hidden">
+                                <h3>Vytvořit nový Pull Request</h3>
+                                <form id="prForm">
+                                    <div class="form-group">
+                                        <label for="prTitle">Název:</label>
+                                        <input type="text" id="prTitle" required placeholder="Stručný popis změn">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="prDescription">Popis:</label>
+                                        <textarea id="prDescription" rows="4" placeholder="Detailní popis změn..."></textarea>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="prHeadBranch">Zdrojová větev:</label>
+                                            <select id="prHeadBranch" required>
+                                                <option value="">Načítání větví...</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="prBaseBranch">Cílová větev:</label>
+                                            <select id="prBaseBranch" required>
+                                                <option value="">Načítání větví...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" id="cancelPrBtn" class="secondary-btn">Zrušit</button>
+                                        <button type="submit">Vytvořit Pull Request</button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- Seznam pull requestů -->
+                            <div id="pullRequestList" class="pull-request-list">
+                                <div class="loading">Načítání pull requestů...</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="diff-content" id="diffContent">
-                        <div class="diff-placeholder">
-                            Vyberte větve a soubor pro porovnání
+
+                    <!-- Tab 3: Porovnání změn -->
+                    <div class="tab-pane" id="diff-tab">
+                        <div class="diff-viewer-section">
+                            <h2>Porovnání změn</h2>
+                            <div class="diff-viewer">
+                                <div class="diff-controls">
+                                    <div class="branch-select">
+                                        <div class="form-group">
+                                            <label>Původní větev:</label>
+                                            <select id="sourceBranch" class="branch-dropdown">
+                                                <option value="main">main</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Porovnávaná větev:</label>
+                                            <select id="targetBranch" class="branch-dropdown">
+                                                <option value="main">main</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="file-select">
+                                        <div class="form-group">
+                                            <label>Vyberte soubor:</label>
+                                            <input type="file" id="fileSelect">
+                                        </div>
+                                        <button id="compareBranches" class="compare-btn">Porovnat</button>
+                                    </div>
+                                </div>
+                                <div class="diff-content" id="diffContent">
+                                    <div class="diff-placeholder">
+                                        Vyberte větve a soubor pro porovnání
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
     </main>
 
+    <footer class="footer">
+        <div class="container">
+            <p>CodeNest &copy; 2025</p>
+        </div>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/login.js"></script> 
     <script src="js/auth.js"></script>
     <script src="js/repositories.js"></script>
     <script src="js/commits.js"></script>
-    <script src="js/visualization.js"></script>
+    <script src="js/pull-requests.js"></script>
+    <script src="js/diff-viewer.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/tabs.js"></script>
     <script src="js/main.js"></script>
+    
 </body>
 </html>
