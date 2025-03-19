@@ -27,6 +27,8 @@ function FileViewer({ repository }) {
       try {
         setLoading(true);
         const [owner, repo] = repository.full_name.split('/');
+        console.log(`Načítám obsah adresáře: ${owner}/${repo}/${currentPath}`);
+        
         const content = await GitHubService.getDirectoryContent(owner, repo, currentPath);
         
         // Seřazení souborů - nejprve složky, pak soubory
@@ -39,7 +41,7 @@ function FileViewer({ repository }) {
         setFiles(sortedContent);
       } catch (err) {
         console.error('Chyba při načítání obsahu adresáře:', err);
-        setError('Nepodařilo se načíst obsah adresáře');
+        setError('Nepodařilo se načíst obsah adresáře: ' + err.message);
       } finally {
         setLoading(false);
       }
@@ -48,28 +50,63 @@ function FileViewer({ repository }) {
     fetchDirectoryContent();
   }, [repository, currentPath]);
 
+  // Kontrola, zda je soubor PDF
+  const isPdfFile = (fileName) => {
+    return fileName.toLowerCase().endsWith('.pdf');
+  };
+
   // Zpracování kliknutí na soubor/složku
   const handleFileClick = async (file) => {
-    if (file.type === 'dir') {
-      // Pokud je to složka, změníme aktuální cestu
-      setCurrentPath(file.path);
-      setSelectedFile(null);
-      setFileContent(null);
-    } else {
-      // Pokud je to soubor, načteme jeho obsah
-      setSelectedFile(file);
-      setLoadingContent(true);
-      
-      try {
+    try {
+      if (file.type === 'dir') {
+        // Pokud je to složka, změníme aktuální cestu
+        setCurrentPath(file.path);
+        setSelectedFile(null);
+        setFileContent(null);
+      } else {
+        // Pokud je to soubor, načteme jeho obsah
+        setSelectedFile(file);
+        setLoadingContent(true);
+        
         const [owner, repo] = repository.full_name.split('/');
-        const content = await GitHubService.getFileContent(owner, repo, file.path);
-        setFileContent(content);
-      } catch (err) {
-        console.error('Chyba při načítání obsahu souboru:', err);
-        setFileContent({ content: 'Nepodařilo se načíst obsah souboru' });
-      } finally {
-        setLoadingContent(false);
+        console.log(`Načítám soubor: ${owner}/${repo}/${file.path}`);
+        
+        // Pro PDF soubory nemusíme načítat obsah, jen uložíme URL
+        if (isPdfFile(file.name)) {
+          setFileContent({
+            isPdf: true,
+            pdfUrl: file.download_url
+          });
+        } else {
+          // Pro ostatní soubory načteme obsah
+          try {
+            const response = await fetch(file.download_url);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            // Získání textového obsahu
+            const text = await response.text();
+            setFileContent({ content: text });
+          } catch (err) {
+            console.error('Chyba při přímém načtení souboru:', err);
+            
+            // Záložní metoda přes GitHubService
+            try {
+              const content = await GitHubService.getFileContent(owner, repo, file.path);
+              setFileContent(content);
+            } catch (serviceErr) {
+              console.error('Chyba při načítání souboru pomocí služby:', serviceErr);
+              setFileContent({ content: 'Nepodařilo se načíst obsah souboru' });
+            }
+          }
+        }
       }
+    } catch (err) {
+      console.error('Obecná chyba při práci se souborem:', err);
+      setFileContent({ content: `Chyba: ${err.message}` });
+    } finally {
+      setLoadingContent(false);
     }
   };
 
@@ -122,6 +159,12 @@ function FileViewer({ repository }) {
             <path fillRule="evenodd" d="M1.75 1A1.75 1.75 0 000 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25v-10.5A1.75 1.75 0 0014.25 1H1.75zM5 6.25a.75.75 0 01.75-.75h4.5a.75.75 0 110 1.5h-4.5A.75.75 0 015 6.25z"></path>
           </svg>
         );
+      case 'pdf':
+        return (
+          <svg viewBox="0 0 16 16" width="16" height="16" className="file-icon pdf-icon">
+            <path fillRule="evenodd" d="M5 1H3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V3a2 2 0 00-2-2h-3v2h3a1 1 0 110 2H9.5v1H12a1 1 0 110 2H9.5v1H12a1 1 0 110 2H9.5v1h3a1 1 0 01.99.84l.01.16v.54l-.05.3A1 1 0 0113 13H3a1 1 0 01-.99-.84L2 12V3a1 1 0 01.99-.84L3 2h2V1z"></path>
+          </svg>
+        );
       default:
         return (
           <svg viewBox="0 0 16 16" width="16" height="16" className="file-icon default-icon">
@@ -169,6 +212,43 @@ function FileViewer({ repository }) {
           </span>
         ))}
       </div>
+    );
+  };
+
+  // Vykreslení obsahu souboru
+  const renderFileContent = () => {
+    if (!fileContent) return null;
+
+    // Pokud je to PDF, použijeme <iframe> pro zobrazení
+    if (fileContent.isPdf && fileContent.pdfUrl) {
+      return (
+        <div className="pdf-container">
+          <iframe 
+            src={fileContent.pdfUrl}
+            title={selectedFile.name}
+            className="pdf-viewer"
+            width="100%"
+            height="100%"
+          ></iframe>
+          <div className="pdf-actions">
+            <a 
+              href={fileContent.pdfUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="pdf-download-link"
+            >
+              Otevřít PDF v novém okně
+            </a>
+          </div>
+        </div>
+      );
+    }
+    
+    // Pro ostatní soubory zobrazíme obsah jako text
+    return (
+      <pre className={`code-content ${selectedFile ? getLanguageClass(selectedFile.name) : ''}`}>
+        {fileContent.content}
+      </pre>
     );
   };
 
@@ -226,9 +306,7 @@ function FileViewer({ repository }) {
                 <div className="file-header">
                   <h3>{selectedFile.name}</h3>
                 </div>
-                <pre className={`code-content ${getLanguageClass(selectedFile.name)}`}>
-                  {fileContent.content}
-                </pre>
+                {renderFileContent()}
               </>
             ) : null
           ) : (
