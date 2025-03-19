@@ -48,6 +48,55 @@ function RepoSelector({ onSelectRepo }) {
     }
   }, [searchTerm, repositories]);
 
+  // Formátování data aktualizace
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return 'Aktualizováno: dnes';
+    } else if (diffDays === 1) {
+      return 'Aktualizováno: včera';
+    } else if (diffDays < 7) {
+      return `Aktualizováno: před ${diffDays} dny`;
+    } else if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return `Aktualizováno: před ${weeks} ${weeks === 1 ? 'týdnem' : 'týdny'}`;
+    } else {
+      return `Aktualizováno: ${date.getDate()}. ${date.getMonth() + 1}. ${date.getFullYear()}`;
+    }
+  };
+
+  // Získání barvy pro programovací jazyk
+  const getLanguageColor = (language) => {
+    if (!language) return '#8f8f8f';
+    
+    const colors = {
+      JavaScript: '#f1e05a',
+      TypeScript: '#2b7489',
+      HTML: '#e34c26',
+      CSS: '#563d7c',
+      Python: '#3572A5',
+      Java: '#b07219',
+      PHP: '#4F5D95',
+      Ruby: '#701516',
+      Go: '#00ADD8',
+      C: '#555555',
+      'C++': '#f34b7d',
+      'C#': '#178600',
+      Swift: '#ffac45',
+      Kotlin: '#F18E33',
+      Rust: '#dea584',
+      Scala: '#c22d40',
+      Dart: '#00B4AB',
+      Elixir: '#6e4a7e',
+    };
+    
+    return colors[language] || '#8f8f8f';
+  };
+
   return (
     <div className="repo-selector">
       <h2>Select the repository you want to work with</h2>
@@ -101,15 +150,8 @@ function RepoSelector({ onSelectRepo }) {
                     {repo.stargazers_count}
                   </span>
                   
-                  <span className="repo-forks">
-                    <svg viewBox="0 0 16 16" width="16" height="16">
-                      <path fillRule="evenodd" d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 100-1.5.75.75 0 000 1.5z"></path>
-                    </svg>
-                    {repo.forks_count}
-                  </span>
-                  
                   <span className="repo-updated">
-                    Aktualizováno: {formatDate(repo.updated_at)}
+                    {formatDate(repo.updated_at)}
                   </span>
                 </div>
               </div>
@@ -119,61 +161,6 @@ function RepoSelector({ onSelectRepo }) {
       )}
     </div>
   );
-}
-
-/**
- * Pomocná funkce pro získání barvy programovacího jazyka
- * @param {string} language - Název jazyka
- * @returns {string} Barva pro daný jazyk
- */
-function getLanguageColor(language) {
-  const colors = {
-    JavaScript: '#f1e05a',
-    TypeScript: '#2b7489',
-    HTML: '#e34c26',
-    CSS: '#563d7c',
-    Python: '#3572A5',
-    Java: '#b07219',
-    PHP: '#4F5D95',
-    Ruby: '#701516',
-    Go: '#00ADD8',
-    C: '#555555',
-    'C++': '#f34b7d',
-    'C#': '#178600',
-    Swift: '#ffac45',
-    Kotlin: '#F18E33',
-    Rust: '#dea584',
-    Scala: '#c22d40',
-    Dart: '#00B4AB',
-    Elixir: '#6e4a7e',
-  };
-  
-  return colors[language] || '#8f8f8f';
-}
-
-/**
- * Formátování data
- * @param {string} dateString - ISO formát data
- * @returns {string} Formátované datum
- */
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now - date);
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays === 0) {
-    return 'dnes';
-  } else if (diffDays === 1) {
-    return 'včera';
-  } else if (diffDays < 7) {
-    return `před ${diffDays} dny`;
-  } else if (diffDays < 30) {
-    const weeks = Math.floor(diffDays / 7);
-    return `před ${weeks} ${weeks === 1 ? 'týdnem' : 'týdny'}`;
-  } else {
-    return date.toLocaleDateString('cs-CZ');
-  }
 }
 
 export default RepoSelector;

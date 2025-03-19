@@ -227,5 +227,5 @@ class GitHubService {
   }
 }
 
-// Exportujeme instanci služby
-export default new GitHubService();
+const githubService = new GitHubService();
+export default githubService;

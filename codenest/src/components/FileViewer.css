@@ -1,15 +1,243 @@
 /* src/components/FileViewer.css */
 .file-viewer {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px;
-    color: #e0e0e0;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  color: #e0e0e0;
+}
+
+.file-viewer h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  background-color: #2d2d2d;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 14px;
+}
+
+.breadcrumb-part {
+  color: #58a6ff;
+}
+
+.breadcrumb-separator {
+  margin: 0 6px;
+  color: #8b949e;
+}
+
+.file-explorer-container {
+  display: flex;
+  height: 70vh;
+  border: 1px solid #333;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.files-list {
+  width: 30%;
+  min-width: 250px;
+  background-color: #2d2d2d;
+  overflow-y: auto;
+  border-right: 1px solid #333;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #333;
+  transition: background-color 0.2s;
+}
+
+.file-item:hover {
+  background-color: #333;
+}
+
+.file-item.selected {
+  background-color: #3a3a3a;
+}
+
+.file-icon {
+  margin-right: 8px;
+  fill: #8b949e;
+}
+
+.folder-icon {
+  fill: #58a6ff;
+}
+
+.js-icon {
+  fill: #f1e05a;
+}
+
+.html-icon {
+  fill: #e34c26;
+}
+
+.css-icon {
+  fill: #563d7c;
+}
+
+.up-icon {
+  fill: #f85149;
+}
+
+.file-name {
+  font-size: 14px;
+  color: #c9d1d9;
+}
+
+.navigate-up {
+  font-weight: bold;
+  color: #c9d1d9;
+  border-bottom: 1px solid #444;
+}
+
+.file-content {
+  flex: 1;
+  background-color: #1e1e1e;
+  overflow: auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.file-header {
+  background-color: #2d2d2d;
+  padding: 10px 16px;
+  border-bottom: 1px solid #333;
+  position: sticky;
+  top: 0;
+}
+
+.file-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #c9d1d9;
+}
+
+.code-content {
+  flex: 1;
+  margin: 0;
+  padding: 16px;
+  font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #c9d1d9;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.no-file-selected, .empty-directory, .loading-indicator, .loading-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #8b949e;
+  font-size: 16px;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  background-color: #2d2d2d;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #8b949e;
+  text-align: center;
+}
+
+.error-message {
+  padding: 16px;
+  background-color: rgba(248, 81, 73, 0.1);
+  border: 1px solid rgba(248, 81, 73, 0.2);
+  border-radius: 6px;
+  color: #f85149;
+  margin: 20px;
+  text-align: center;
+}
+
+/* Syntax highlight classes */
+.language-javascript {
+  color: #f1e05a;
+}
+
+.language-typescript {
+  color: #2b7489;
+}
+
+.language-html {
+  color: #e34c26;
+}
+
+.language-css {
+  color: #563d7c;
+}
+
+.language-json {
+  color: #8be9fd;
+}
+
+.language-markdown {
+  color: #c9d1d9;
+}
+
+.language-plaintext {
+  color: #c9d1d9;
+}
+
+/* Scrollbar styles */
+.files-list::-webkit-scrollbar, .file-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.files-list::-webkit-scrollbar-track, .file-content::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.files-list::-webkit-scrollbar-thumb, .file-content::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.files-list::-webkit-scrollbar-thumb:hover, .file-content::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .file-explorer-container {
+    flex-direction: column;
+    height: auto;
   }
   
-  .file-viewer h2 {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 24px;
-    text-align: center;
-    color: #ffffff;
+  .files-list {
+    width: 100%;
+    max-height: 300px;
+    border-right: none;
+    border-bottom: 1px solid #333;
   }
+  
+  .file-content {
+    min-height: 300px;
+  }
+}
