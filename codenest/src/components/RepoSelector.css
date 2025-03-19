@@ -1,0 +1,151 @@
+/* src/components/RepoSelector.css */
+.repo-selector {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #e0e0e0;
+  }
+  
+  .repo-selector h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    text-align: center;
+    color: #ffffff;
+  }
+  
+  .search-container {
+    margin-bottom: 20px;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 16px;
+    background-color: #3a3a3a;
+    border: 1px solid #555;
+    border-radius: 6px;
+    color: #ffffff;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: #0366d6;
+    box-shadow: 0 0 0 2px rgba(3, 102, 214, 0.3);
+  }
+  
+  .repositories-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 4px;
+  }
+  
+  .repo-item {
+    background-color: #2d2d2d;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+  }
+  
+  .repo-item:hover {
+    background-color: #333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .repo-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #58a6ff;
+    margin-bottom: 8px;
+  }
+  
+  .repo-description {
+    font-size: 14px;
+    color: #c0c0c0;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  
+  .repo-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 13px;
+    color: #8b949e;
+  }
+  
+  .repo-language, .repo-stars, .repo-forks {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .language-color {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  
+  .repo-stars svg, .repo-forks svg {
+    fill: #8b949e;
+  }
+  
+  .repo-updated {
+    margin-left: auto;
+  }
+  
+  .loading-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 16px;
+    color: #8b949e;
+  }
+  
+  .error-message {
+    padding: 16px;
+    background-color: rgba(248, 81, 73, 0.1);
+    border: 1px solid rgba(248, 81, 73, 0.2);
+    border-radius: 6px;
+    color: #f85149;
+    margin: 20px 0;
+    text-align: center;
+  }
+  
+  .no-repos {
+    padding: 30px;
+    text-align: center;
+    color: #8b949e;
+    font-size: 16px;
+    background-color: #2d2d2d;
+    border-radius: 6px;
+    border: 1px dashed #444;
+  }
+  
+  /* Styl pro scrollbar */
+  .repositories-list::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .repositories-list::-webkit-scrollbar-track {
+    background: #2d2d2d;
+    border-radius: 4px;
+  }
+  
+  .repositories-list::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+  }
+  
+  .repositories-list::-webkit-scrollbar-thumb:hover {
+    background: #666;
+  }

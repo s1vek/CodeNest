@@ -1,0 +1,15 @@
+/* src/components/FileViewer.css */
+.file-viewer {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #e0e0e0;
+  }
+  
+  .file-viewer h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    text-align: center;
+    color: #ffffff;
+  }
