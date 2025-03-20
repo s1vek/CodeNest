@@ -1,5 +1,5 @@
 // src/components/PullRequest.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import GitHubService from '../services/github';
 import PullRequestCreator from './PullRequestCreator';
 import './PullRequest.css';
@@ -17,15 +17,11 @@ function PullRequest({ repository }) {
   const [error, setError] = useState(null);
   const [expandedPR, setExpandedPR] = useState(null);
   const [isCreatingPR, setIsCreatingPR] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
-  // Načtení pull requestů při změně repozitáře
-  useEffect(() => {
-    if (!repository) return;
-    fetchPullRequests();
-  }, [repository]);
-
-  // Funkce pro načtení pull requestů
-  const fetchPullRequests = async () => {
+  // Definujeme fetchPullRequests pomocí useCallback, aby se netvořila nová instance při každém renderu
+  const fetchPullRequests = useCallback(async () => {
     try {
       setLoading(true);
       const [owner, repo] = repository.full_name.split('/');
@@ -37,7 +33,23 @@ function PullRequest({ repository }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [repository]);
+
+  // Načtení pull requestů při změně repozitáře
+  useEffect(() => {
+    if (!repository) return;
+    fetchPullRequests();
+  }, [repository, fetchPullRequests]);
+
+  // Efekt pro automatické skrytí úspěšné zprávy
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   // Zobrazení/skrytí detailů pull requestu
   const togglePRDetails = (prNumber) => {
@@ -59,6 +71,40 @@ function PullRequest({ repository }) {
     // Přidáme nový PR do seznamu
     setPullRequests([newPR, ...pullRequests]);
     // Zůstaneme v režimu vytváření pro případné vytvoření dalšího PR
+  };
+
+  // Zavření Pull Requestu
+  const handleClosePullRequest = async (pr) => {
+    if (!window.confirm(`Opravdu chcete zavřít pull request #${pr.number}?`)) {
+      return;
+    }
+    
+    try {
+      setActionLoading(pr.number);
+      setError(null);
+      
+      const [owner, repo] = repository.full_name.split('/');
+      
+      const closedPR = await GitHubService.closePullRequest(
+        owner,
+        repo,
+        pr.number
+      );
+      
+      // Aktualizace PR v seznamu
+      setPullRequests(
+        pullRequests.map(existingPR => 
+          existingPR.number === pr.number ? closedPR : existingPR
+        )
+      );
+      
+      setSuccessMessage(`Pull request #${pr.number} byl úspěšně uzavřen`);
+    } catch (err) {
+      console.error('Error closing pull request:', err);
+      setError(`Nepodařilo se zavřít pull request: ${err.message}`);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   // Formátování data
@@ -132,6 +178,12 @@ function PullRequest({ repository }) {
           {isCreatingPR ? 'View Pull Requests' : 'Create Pull Request'}
         </button>
       </div>
+      
+      {successMessage && (
+        <div className="pr-success-message">
+          <span className="success-icon">✓</span> {successMessage}
+        </div>
+      )}
       
       {isCreatingPR ? (
         <PullRequestCreator 
@@ -236,8 +288,21 @@ function PullRequest({ repository }) {
                           </div>
                         </div>
 
-                        {pr.html_url && (
-                          <div className="pr-actions">
+                        <div className="pr-actions">
+                          {pr.state === 'open' && (
+                            <button 
+                              className="close-pr-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleClosePullRequest(pr);
+                              }}
+                              disabled={actionLoading === pr.number}
+                            >
+                              {actionLoading === pr.number ? 'Closing...' : 'Close Pull Request'}
+                            </button>
+                          )}
+                          
+                          {pr.html_url && (
                             <a 
                               href={pr.html_url} 
                               target="_blank" 
@@ -249,8 +314,8 @@ function PullRequest({ repository }) {
                                 <path fillRule="evenodd" d="M10.604 1h4.146a.25.25 0 01.25.25v4.146a.25.25 0 01-.427.177L13.03 4.03 9.28 7.78a.75.75 0 01-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0110.604 1zM3.75 2A1.75 1.75 0 002 3.75v8.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 12.25v-3.5a.75.75 0 00-1.5 0v3.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-8.5a.25.25 0 01.25-.25h3.5a.75.75 0 000-1.5h-3.5z"></path>
                               </svg>
                             </a>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

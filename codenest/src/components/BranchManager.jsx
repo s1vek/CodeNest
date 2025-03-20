@@ -1,5 +1,5 @@
 // src/components/BranchManager.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import GitHubService from '../services/github';
 import './BranchManager.css';
 
@@ -11,7 +11,7 @@ import './BranchManager.css';
  * @param {String} props.currentBranch - Aktuálně vybraná větev
  * @returns {JSX.Element} BranchManager komponenta
  */
-function BranchManager({ repository, onBranchSelect, currentBranch }) {
+const BranchManager = forwardRef(({ repository, onBranchSelect, currentBranch }, ref) => {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,39 +20,62 @@ function BranchManager({ repository, onBranchSelect, currentBranch }) {
   const [baseBranch, setBaseBranch] = useState('');
   const [creating, setCreating] = useState(false);
   const [success, setSuccess] = useState(null);
+  const [deletingBranch, setDeletingBranch] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
+
+  // Definujeme fetchBranches pomocí useCallback, aby se netvořila nová instance při každém renderu
+  const fetchBranches = useCallback(async () => {
+    if (!repository) return;
+    
+    try {
+      setLoading(true);
+      const [owner, repo] = repository.full_name.split('/');
+      const branchesData = await GitHubService.getBranches(owner, repo);
+      setBranches(branchesData);
+      
+      // Pokud není vybraná větev, nastavíme výchozí
+      if (!currentBranch && branchesData.length > 0) {
+        const defaultBranch = branchesData.find(branch => branch.name === repository.default_branch) 
+          || branchesData[0];
+        if (onBranchSelect) {
+          onBranchSelect(defaultBranch.name);
+        }
+        setBaseBranch(defaultBranch.name);
+      } else if (branchesData.length > 0) {
+        setBaseBranch(repository.default_branch || branchesData[0].name);
+      }
+    } catch (err) {
+      console.error('Error loading branches:', err);
+      setError('Failed to load branches');
+    } finally {
+      setLoading(false);
+    }
+  }, [repository, currentBranch, onBranchSelect]);
+
+  // Exponujeme metodu refresh přes ref
+  useImperativeHandle(ref, () => ({
+    refresh: () => {
+      setDeleteError(null);
+      setShowDeleteConfirm(null);
+      fetchBranches();
+    }
+  }));
 
   // Načtení větví při změně repozitáře
   useEffect(() => {
-    if (!repository) return;
-
-    async function fetchBranches() {
-      try {
-        setLoading(true);
-        const [owner, repo] = repository.full_name.split('/');
-        const branchesData = await GitHubService.getBranches(owner, repo);
-        setBranches(branchesData);
-        
-        // Pokud není vybraná větev, nastavíme výchozí
-        if (!currentBranch && branchesData.length > 0) {
-          const defaultBranch = branchesData.find(branch => branch.name === repository.default_branch) 
-            || branchesData[0];
-          if (onBranchSelect) {
-            onBranchSelect(defaultBranch.name);
-          }
-          setBaseBranch(defaultBranch.name);
-        } else if (branchesData.length > 0) {
-          setBaseBranch(repository.default_branch || branchesData[0].name);
-        }
-      } catch (err) {
-        console.error('Error loading branches:', err);
-        setError('Failed to load branches');
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchBranches();
-  }, [repository, currentBranch, onBranchSelect]);
+  }, [fetchBranches]);
+
+  // Efekt pro automatické skrytí úspěšné zprávy
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   // Zpracování vytvoření nové větve
   const handleCreateBranch = async (e) => {
@@ -83,8 +106,7 @@ function BranchManager({ repository, onBranchSelect, currentBranch }) {
       );
       
       // Refresh branch list
-      const branchesData = await GitHubService.getBranches(owner, repo);
-      setBranches(branchesData);
+      await fetchBranches();
       
       setSuccess(`Branch "${newBranchName}" created successfully`);
       setNewBranchName('');
@@ -101,6 +123,67 @@ function BranchManager({ repository, onBranchSelect, currentBranch }) {
     } finally {
       setCreating(false);
     }
+  };
+
+  // Funkce pro smazání větve
+  const handleDeleteBranch = async (branchName) => {
+    try {
+      setDeletingBranch(branchName);
+      setDeleteError(null);
+      
+      const [owner, repo] = repository.full_name.split('/');
+      
+      // Kontrola, zda není větev výchozí
+      if (branchName === repository.default_branch) {
+        setDeleteError('Cannot delete the default branch');
+        return;
+      }
+      
+      // Kontrola, zda není větev ochráněná
+      try {
+        const isProtected = await GitHubService.isBranchProtected(owner, repo, branchName);
+        if (isProtected) {
+          setDeleteError('Cannot delete a protected branch');
+          return;
+        }
+      } catch (err) {
+        console.log('Protection check error, continuing with delete attempt');
+      }
+      
+      // Pokus o smazání větve
+      await GitHubService.deleteBranch(owner, repo, branchName);
+      
+      // Aktualizace seznamu větví
+      await fetchBranches();
+      
+      // Pokud byla smazána aktuálně vybraná větev, přepneme na výchozí
+      if (currentBranch === branchName && onBranchSelect) {
+        onBranchSelect(repository.default_branch);
+      }
+      
+      setSuccess(`Branch "${branchName}" was deleted successfully`);
+      setShowDeleteConfirm(null);
+      
+    } catch (err) {
+      console.error('Error deleting branch:', err);
+      setDeleteError(`Failed to delete branch: ${err.message}`);
+    } finally {
+      setDeletingBranch(null);
+    }
+  };
+
+  // Zobrazení potvrzovacího dialogu pro smazání
+  const confirmDeleteBranch = (branchName, e) => {
+    e.stopPropagation();
+    setDeleteError(null);
+    setShowDeleteConfirm(branchName);
+  };
+
+  // Zrušení smazání větve
+  const cancelDeleteBranch = (e) => {
+    e.stopPropagation();
+    setShowDeleteConfirm(null);
+    setDeleteError(null);
   };
 
   return (
@@ -174,6 +257,12 @@ function BranchManager({ repository, onBranchSelect, currentBranch }) {
         </div>
       )}
       
+      {deleteError && (
+        <div className="branch-error">
+          {deleteError}
+        </div>
+      )}
+      
       <div className="branch-list-container">
         <h4>Available Branches</h4>
         
@@ -195,9 +284,46 @@ function BranchManager({ repository, onBranchSelect, currentBranch }) {
                   </svg>
                 </div>
                 <span className="branch-name">{branch.name}</span>
-                {branch.name === repository.default_branch && (
-                  <span className="default-badge">default</span>
-                )}
+                
+                <div className="branch-actions">
+                  {branch.name === repository.default_branch && (
+                    <span className="default-badge">default</span>
+                  )}
+                  
+                  {branch.name !== repository.default_branch && (
+                    showDeleteConfirm === branch.name ? (
+                      <div className="delete-confirmation">
+                        <span>Confirm delete?</span>
+                        <button 
+                          className="confirm-delete"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteBranch(branch.name);
+                          }}
+                          disabled={deletingBranch === branch.name}
+                        >
+                          {deletingBranch === branch.name ? 'Deleting...' : 'Yes'}
+                        </button>
+                        <button 
+                          className="cancel-delete"
+                          onClick={cancelDeleteBranch}
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        className="delete-branch-button"
+                        onClick={(e) => confirmDeleteBranch(branch.name, e)}
+                        title="Delete branch"
+                      >
+                        <svg viewBox="0 0 16 16" width="12" height="12">
+                          <path fillRule="evenodd" d="M6.5 1.75a.25.25 0 01.25-.25h2.5a.25.25 0 01.25.25V3h-3V1.75zm4.5 0V3h2.25a.75.75 0 010 1.5H2.75a.75.75 0 010-1.5H5V1.75C5 .784 5.784 0 6.75 0h2.5C10.216 0 11 .784 11 1.75zM4.496 6.675a.75.75 0 10-1.492.15l.66 6.6A1.75 1.75 0 005.405 15h5.19c.9 0 1.652-.681 1.741-1.576l.66-6.6a.75.75 0 00-1.492-.149l-.66 6.6a.25.25 0 01-.249.225h-5.19a.25.25 0 01-.249-.225l-.66-6.6z"></path>
+                        </svg>
+                      </button>
+                    )
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -205,6 +331,6 @@ function BranchManager({ repository, onBranchSelect, currentBranch }) {
       </div>
     </div>
   );
-}
+});
 
 export default BranchManager;

@@ -1,5 +1,5 @@
 // src/components/CommitHistory.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import GitHubService from '../services/github';
 import './CommitHistory.css';
 
@@ -9,7 +9,7 @@ import './CommitHistory.css';
  * @param {Object} props.repository - Data vybraného repozitáře
  * @returns {JSX.Element} CommitHistory komponenta
  */
-function CommitHistory({ repository }) {
+const CommitHistory = forwardRef(({ repository }, ref) => {
   // State pro commity, načítání, chyby a stránkování
   const [commits, setCommits] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,26 +20,37 @@ function CommitHistory({ repository }) {
   const [commitDetails, setCommitDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
+  // Funkce pro načtení commitů
+  const fetchCommits = useCallback(async () => {
+    if (!repository) return;
+    
+    try {
+      setLoading(true);
+      const [owner, repo] = repository.full_name.split('/');
+      const commitsData = await GitHubService.getCommits(owner, repo, page);
+      setCommits(commitsData);
+      setHasNextPage(commitsData.length === 10); // Pokud je 10 commitů, předpokládáme, že existuje další stránka
+    } catch (err) {
+      setError('Nepodařilo se načíst commity');
+    } finally {
+      setLoading(false);
+    }
+  }, [repository, page]);
+
+  // Exponujeme metodu refresh přes ref
+  useImperativeHandle(ref, () => ({
+    refresh: () => {
+      setExpandedCommit(null);
+      setCommitDetails(null);
+      fetchCommits();
+    }
+  }));
+
   // Načtení commitů při změně repozitáře nebo stránky
   useEffect(() => {
     if (!repository) return;
-
-    async function fetchCommits() {
-      try {
-        setLoading(true);
-        const [owner, repo] = repository.full_name.split('/');
-        const commitsData = await GitHubService.getCommits(owner, repo, page);
-        setCommits(commitsData);
-        setHasNextPage(commitsData.length === 10); // Pokud je 10 commitů, předpokládáme, že existuje další stránka
-      } catch (err) {
-        setError('Nepodařilo se načíst commity');
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchCommits();
-  }, [repository, page]);
+  }, [repository, page, fetchCommits]);
 
   // Změna stránky
   const handlePageChange = (newPage) => {
@@ -214,6 +225,6 @@ function CommitHistory({ repository }) {
       )}
     </div>
   );
-}
+});
 
 export default CommitHistory;

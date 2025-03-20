@@ -1,19 +1,25 @@
 // src/components/Header.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
-/**
- * Komponenta s navigační lištou aplikace
- * @param {Object} props - Props komponenty
- * @param {Object} props.selectedRepo - Vybraný repozitář
- * @param {string} props.activeTab - Aktivní záložka
- * @param {Function} props.onTabChange - Callback pro změnu záložky
- * @param {Function} props.onBack - Callback pro návrat na výběr repozitáře
- * @returns {JSX.Element} Header komponenta
- */
-function Header({ selectedRepo, activeTab, onTabChange, onBack }) {
+function Header({ selectedRepo, activeTab, onTabChange, onBack, onRefresh }) {
   const { user, logout } = useAuth();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    
+    if (onRefresh) {
+      onRefresh(activeTab);
+      
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 1500);
+    } else {
+      window.location.reload();
+    }
+  };
 
   return (
     <header className="app-header">
@@ -38,12 +44,37 @@ function Header({ selectedRepo, activeTab, onTabChange, onBack }) {
       
       {selectedRepo && (
         <div className="repo-nav">
-          <button className="back-button" onClick={onBack}>
-            <svg viewBox="0 0 16 16" width="16" height="16">
-              <path fillRule="evenodd" d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.81 7h7.44a.75.75 0 010 1.5H4.81l2.97 2.97a.75.75 0 010 1.06z"></path>
-            </svg>
-            Back to the selection
-          </button>
+          <div className="repo-nav-left">
+            <button className="back-button" onClick={onBack}>
+              <svg viewBox="0 0 16 16" width="16" height="16">
+                <path fillRule="evenodd" d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.81 7h7.44a.75.75 0 010 1.5H4.81l2.97 2.97a.75.75 0 010 1.06z"></path>
+              </svg>
+              Back to the selection
+            </button>
+            
+            <button 
+              className="refresh-button"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              title="Refresh current view"
+            >
+              {isRefreshing ? (
+                <svg className="rotating" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 4v6h-6"></path>
+                  <path d="M1 20v-6h6"></path>
+                  <path d="M3.51 9a9 9 0 0114.85-3.36L23 10"></path>
+                  <path d="M1 14l4.64 4.36A9 9 0 0020.49 15"></path>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 4v6h-6"></path>
+                  <path d="M1 20v-6h6"></path>
+                  <path d="M3.51 9a9 9 0 0114.85-3.36L23 10"></path>
+                  <path d="M1 14l4.64 4.36A9 9 0 0020.49 15"></path>
+                </svg>
+              )}
+            </button>
+          </div>
           
           <div className="repo-info">
             <h2 className="repo-name">
@@ -75,6 +106,15 @@ function Header({ selectedRepo, activeTab, onTabChange, onBack }) {
                 <path fillRule="evenodd" d="M3.75 1.5a.25.25 0 00-.25.25v11.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25V6H9.75A1.75 1.75 0 018 4.25V1.5H3.75zm5.75.56v2.19c0 .138.112.25.25.25h2.19L9.5 2.06zM2 1.75C2 .784 2.784 0 3.75 0h5.086c.464 0 .909.184 1.237.513l3.414 3.414c.329.328.513.773.513 1.237v8.086A1.75 1.75 0 0112.25 15h-8.5A1.75 1.75 0 012 13.25V1.75z"></path>
               </svg>
               Files
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'branches' ? 'active' : ''}`}
+              onClick={() => onTabChange('branches')}
+            >
+              <svg viewBox="0 0 16 16" width="16" height="16">
+                <path fillRule="evenodd" d="M11.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122V6A2.5 2.5 0 0110.5 8.5H1.75a.75.75 0 100 1.5h8.75A1 1 0 0111.5 11v-.128a2.25 2.25 0 112.5 0V12a1 1 0 01-1 1h-8.75a.75.75 0 100 1.5h8.75A2.5 2.5 0 0014 12v-1.028a2.25 2.25 0 01-2.25-3.72V6A2.5 2.5 0 0010.5 3.5h-1.25a.75.75 0 100-1.5h1.25a4 4 0 013.5 5.9 2.999 2.999 0 00-1.34-.392 4.003 4.003 0 00-3.66-5.008V2.75zm1.75 4.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-7 6a.75.75 0 100 1.5.75.75 0 000-1.5z"></path>
+              </svg>
+              Branches
             </button>
             <button 
               className={`tab-button ${activeTab === 'upload' ? 'active' : ''}`}

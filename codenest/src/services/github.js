@@ -291,6 +291,17 @@ class GitHubService {
     }
   }
 
+  /**
+   * Vytvoření commitu s obsahem v Base64
+   * @param {string} owner - Vlastník repozitáře
+   * @param {string} repo - Název repozitáře
+   * @param {string} path - Cesta k souboru
+   * @param {string} message - Commit message
+   * @param {string} base64Content - Obsah souboru v Base64
+   * @param {string} branch - Název větve
+   * @param {string} sha - SHA existujícího souboru (při aktualizaci)
+   * @returns {Promise<Object>} Výsledek operace
+   */
   async createCommitWithBase64(owner, repo, path, message, base64Content, branch, sha) {
     try {
       const params = {
@@ -315,28 +326,6 @@ class GitHubService {
       return data;
     } catch (error) {
       console.error("Chyba při vytváření commitu:", error);
-      throw error;
-    }
-  }
-
-  // Přidejte tyto metody do src/services/github.js
-
-  /**
-   * Získání seznamu větví repozitáře se základními informacemi
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @returns {Promise<Array>} Seznam větví
-   */
-  async getBranches(owner, repo) {
-    try {
-      const { data } = await this.octokit.repos.listBranches({
-        owner,
-        repo,
-        per_page: 100
-      });
-      return data;
-    } catch (error) {
-      console.error("Error getting branches:", error);
       throw error;
     }
   }
@@ -369,6 +358,53 @@ class GitHubService {
       return data;
     } catch (error) {
       console.error("Error creating branch:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Smazání větve v repozitáři
+   * @param {string} owner - Vlastník repozitáře
+   * @param {string} repo - Název repozitáře
+   * @param {string} branchName - Název větve ke smazání
+   * @returns {Promise<Object>} Výsledek operace
+   */
+  async deleteBranch(owner, repo, branchName) {
+    try {
+      // GitHub API používá 'refs/heads/BRANCH_NAME' formát pro smazání větve
+      const { data } = await this.octokit.git.deleteRef({
+        owner,
+        repo,
+        ref: `heads/${branchName}`
+      });
+      return data;
+    } catch (error) {
+      console.error("Error deleting branch:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Kontrola, zda je větev ochráněná
+   * @param {string} owner - Vlastník repozitáře
+   * @param {string} repo - Název repozitáře
+   * @param {string} branchName - Název větve
+   * @returns {Promise<boolean>} True pokud je větev ochráněná
+   */
+  async isBranchProtected(owner, repo, branchName) {
+    try {
+      const { data } = await this.octokit.repos.getBranchProtection({
+        owner,
+        repo,
+        branch: branchName
+      });
+      return !!data;
+    } catch (error) {
+      // Pokud dostaneme 404, větev není ochráněná
+      if (error.status === 404) {
+        return false;
+      }
+      console.error("Error checking branch protection:", error);
       throw error;
     }
   }
@@ -442,6 +478,28 @@ class GitHubService {
     }
   }
 
+  /**
+   * Zavření Pull Requestu
+   * @param {string} owner - Vlastník repozitáře
+   * @param {string} repo - Název repozitáře
+   * @param {number} pull_number - Číslo Pull Requestu
+   * @param {string} state - Stav ("closed" nebo "open")
+   * @returns {Promise<Object>} Aktualizovaný Pull Request
+   */
+  async closePullRequest(owner, repo, pull_number, state = "closed") {
+    try {
+      const { data } = await this.octokit.pulls.update({
+        owner,
+        repo,
+        pull_number,
+        state
+      });
+      return data;
+    } catch (error) {
+      console.error("Error closing pull request:", error);
+      throw error;
+    }
+  }
 }
 
 // Exportujeme instanci služby

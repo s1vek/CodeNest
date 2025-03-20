@@ -233,6 +233,27 @@
 .pr-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
+}
+
+.close-pr-button {
+  padding: 6px 12px;
+  background-color: #f85149;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.close-pr-button:hover:not(:disabled) {
+  background-color: #e5534b;
+}
+
+.close-pr-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .view-on-github {
@@ -256,6 +277,28 @@
 
 .view-on-github svg {
   fill: #58a6ff;
+}
+
+.pr-success-message {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background-color: rgba(46, 160, 67, 0.1);
+  border: 1px solid rgba(46, 160, 67, 0.2);
+  border-radius: 6px;
+  color: #3fb950;
+  font-size: 15px;
+  animation: fadeOut 3s forwards;
+  animation-delay: 3s;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.success-icon {
+  margin-right: 8px;
+  font-weight: bold;
 }
 
 .loading-indicator, .error-message, .no-prs {

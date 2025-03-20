@@ -1,216 +1,292 @@
 /* src/components/BranchManager.css */
 .branch-manager {
-    background-color: #2d2d2d;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    color: #e0e0e0;
-  }
-  
-  .branch-manager-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-  
-  .branch-manager-header h3 {
-    font-size: 18px;
-    font-weight: 500;
-    margin: 0;
-    color: #ffffff;
-  }
-  
-  .create-branch-button {
-    background-color: #238636;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 16px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .create-branch-button:hover {
-    background-color: #2ea043;
-  }
-  
-  .branch-error, .branch-success {
-    padding: 12px 16px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-    font-size: 14px;
-  }
-  
-  .branch-error {
-    background-color: rgba(248, 81, 73, 0.1);
-    border: 1px solid rgba(248, 81, 73, 0.2);
-    color: #f85149;
-  }
-  
-  .branch-success {
-    background-color: rgba(46, 160, 67, 0.1);
-    border: 1px solid rgba(46, 160, 67, 0.2);
-    color: #3fb950;
-  }
-  
-  .create-branch-form {
-    background-color: #1e1e1e;
-    padding: 16px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-  }
-  
-  .form-group {
-    margin-bottom: 16px;
-  }
-  
-  .form-group label {
-    display: block;
-    font-size: 14px;
-    color: #c0c0c0;
-    margin-bottom: 8px;
-  }
-  
-  .branch-name-input,
-  .branch-select {
-    width: 100%;
-    padding: 10px 12px;
-    background-color: #3a3a3a;
-    border: 1px solid #555;
-    border-radius: 6px;
-    color: #ffffff;
-    font-size: 14px;
-  }
-  
-  .branch-name-input:focus,
-  .branch-select:focus {
-    outline: none;
-    border-color: #58a6ff;
-    box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
-  }
-  
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-  }
-  
-  .submit-button {
-    padding: 8px 16px;
-    background-color: #238636;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .submit-button:hover:not(:disabled) {
-    background-color: #2ea043;
-  }
-  
-  .submit-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  
-  .branch-list-container {
-    margin-top: 20px;
-  }
-  
-  .branch-list-container h4 {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 12px;
-    color: #c9d1d9;
-  }
-  
-  .branch-list {
-    max-height: 300px;
-    overflow-y: auto;
-    background-color: #1e1e1e;
-    border-radius: 6px;
-  }
-  
-  .branch-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 16px;
-    border-bottom: 1px solid #333;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .branch-item:hover {
-    background-color: #333;
-  }
-  
-  .branch-item.selected {
-    background-color: #1f6feb;
-  }
-  
-  .branch-icon {
-    margin-right: 10px;
-    display: flex;
-    align-items: center;
-  }
-  
-  .branch-icon svg {
-    fill: #8b949e;
-  }
-  
-  .branch-item.selected .branch-icon svg {
-    fill: #ffffff;
-  }
-  
-  .branch-name {
-    flex: 1;
-    font-size: 14px;
-    color: #c9d1d9;
-  }
-  
-  .branch-item.selected .branch-name {
-    color: #ffffff;
-  }
-  
-  .default-badge {
-    background-color: #2d333b;
-    color: #768390;
-    padding: 2px 6px;
-    border-radius: 12px;
-    font-size: 12px;
-  }
-  
-  .branch-item.selected .default-badge {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-  }
-  
-  .loading-indicator, .no-branches {
-    padding: 20px;
-    text-align: center;
-    color: #8b949e;
-    font-size: 14px;
-    background-color: #1e1e1e;
-    border-radius: 6px;
-  }
-  
-  .branch-list::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  .branch-list::-webkit-scrollbar-track {
-    background: #1e1e1e;
-    border-radius: 4px;
-  }
-  
-  .branch-list::-webkit-scrollbar-thumb {
-    background: #555;
-    border-radius: 4px;
-  }
-  
-  .branch-list::-webkit-scrollbar-thumb:hover {
-    background: #666;
-  }
+  background-color: #2d2d2d;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  color: #e0e0e0;
+}
+
+.branch-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.branch-manager-header h3 {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+  color: #ffffff;
+}
+
+.create-branch-button {
+  background-color: #238636;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.create-branch-button:hover {
+  background-color: #2ea043;
+}
+
+.branch-error, .branch-success {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.branch-error {
+  background-color: rgba(248, 81, 73, 0.1);
+  border: 1px solid rgba(248, 81, 73, 0.2);
+  color: #f85149;
+}
+
+.branch-success {
+  background-color: rgba(46, 160, 67, 0.1);
+  border: 1px solid rgba(46, 160, 67, 0.2);
+  color: #3fb950;
+  animation: fadeOut 3s forwards;
+  animation-delay: 3s;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.create-branch-form {
+  background-color: #1e1e1e;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  color: #c0c0c0;
+  margin-bottom: 8px;
+}
+
+.branch-name-input,
+.branch-select {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.branch-name-input:focus,
+.branch-select:focus {
+  outline: none;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.submit-button {
+  padding: 8px 16px;
+  background-color: #238636;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-button:hover:not(:disabled) {
+  background-color: #2ea043;
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.branch-list-container {
+  margin-top: 20px;
+}
+
+.branch-list-container h4 {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: #c9d1d9;
+}
+
+.branch-list {
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: #1e1e1e;
+  border-radius: 6px;
+}
+
+.branch-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.branch-item:hover {
+  background-color: #333;
+}
+
+.branch-item.selected {
+  background-color: #1f6feb;
+}
+
+.branch-icon {
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.branch-icon svg {
+  fill: #8b949e;
+}
+
+.branch-item.selected .branch-icon svg {
+  fill: #ffffff;
+}
+
+.branch-name {
+  flex: 1;
+  font-size: 14px;
+  color: #c9d1d9;
+}
+
+.branch-item.selected .branch-name {
+  color: #ffffff;
+}
+
+.branch-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.default-badge {
+  background-color: #2d333b;
+  color: #768390;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.branch-item.selected .default-badge {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.delete-branch-button {
+  background: none;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.delete-branch-button:hover {
+  background-color: rgba(248, 81, 73, 0.2);
+}
+
+.delete-branch-button svg {
+  fill: #f85149;
+}
+
+.delete-confirmation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #e0e0e0;
+  background-color: rgba(248, 81, 73, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.confirm-delete, .cancel-delete {
+  padding: 2px 6px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.confirm-delete {
+  background-color: #f85149;
+  color: white;
+}
+
+.confirm-delete:hover:not(:disabled) {
+  background-color: #e5534b;
+}
+
+.confirm-delete:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.cancel-delete {
+  background-color: #21262d;
+  color: #c9d1d9;
+}
+
+.cancel-delete:hover {
+  background-color: #30363d;
+}
+
+.loading-indicator, .no-branches {
+  padding: 20px;
+  text-align: center;
+  color: #8b949e;
+  font-size: 14px;
+  background-color: #1e1e1e;
+  border-radius: 6px;
+}
+
+.branch-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.branch-list::-webkit-scrollbar-track {
+  background: #1e1e1e;
+  border-radius: 4px;
+}
+
+.branch-list::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.branch-list::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
