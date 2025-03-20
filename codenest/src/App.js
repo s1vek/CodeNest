@@ -28,7 +28,7 @@ function AppContent() {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
-        <p>Načítání aplikace...</p>
+        <p>Loading app...</p>
       </div>
     );
   }

@@ -319,6 +319,129 @@ class GitHubService {
     }
   }
 
+  // Přidejte tyto metody do src/services/github.js
+
+  /**
+   * Získání seznamu větví repozitáře se základními informacemi
+   * @param {string} owner - Vlastník repozitáře
+   * @param {string} repo - Název repozitáře
+   * @returns {Promise<Array>} Seznam větví
+   */
+  async getBranches(owner, repo) {
+    try {
+      const { data } = await this.octokit.repos.listBranches({
+        owner,
+        repo,
+        per_page: 100
+      });
+      return data;
+    } catch (error) {
+      console.error("Error getting branches:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Vytvoření nové větve z existující
+   * @param {string} owner - Vlastník repozitáře
+   * @param {string} repo - Název repozitáře
+   * @param {string} newBranchName - Název nové větve
+   * @param {string} baseBranchName - Název výchozí větve (source)
+   * @returns {Promise<Object>} Informace o vytvořené větvi
+   */
+  async createBranch(owner, repo, newBranchName, baseBranchName) {
+    try {
+      // 1. Získáme referenci výchozí větve
+      const { data: refData } = await this.octokit.git.getRef({
+        owner,
+        repo,
+        ref: `heads/${baseBranchName}`
+      });
+      
+      // 2. Vytvoříme novou větev z této reference
+      const { data } = await this.octokit.git.createRef({
+        owner,
+        repo,
+        ref: `refs/heads/${newBranchName}`,
+        sha: refData.object.sha
+      });
+      
+      return data;
+    } catch (error) {
+      console.error("Error creating branch:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Vytvoření Pull Requestu
+   * @param {string} owner - Vlastník repozitáře
+   * @param {string} repo - Název repozitáře
+   * @param {string} title - Název Pull Requestu
+   * @param {string} body - Popis Pull Requestu
+   * @param {string} headBranch - Název větve s změnami
+   * @param {string} baseBranch - Název cílové větve (obvykle main)
+   * @returns {Promise<Object>} Vytvořený Pull Request
+   */
+  async createPullRequest(owner, repo, title, body, headBranch, baseBranch) {
+    try {
+      const { data } = await this.octokit.pulls.create({
+        owner,
+        repo,
+        title,
+        body,
+        head: headBranch,
+        base: baseBranch
+      });
+      return data;
+    } catch (error) {
+      console.error("Error creating pull request:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Získání detailů konkrétního Pull Requestu
+   * @param {string} owner - Vlastník repozitáře
+   * @param {string} repo - Název repozitáře
+   * @param {number} pull_number - Číslo Pull Requestu
+   * @returns {Promise<Object>} Detail Pull Requestu
+   */
+  async getPullRequestDetails(owner, repo, pull_number) {
+    try {
+      const { data } = await this.octokit.pulls.get({
+        owner,
+        repo,
+        pull_number
+      });
+      return data;
+    } catch (error) {
+      console.error("Error getting pull request details:", error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Získání aktuální větve ze zadané reference
+   * @param {string} owner - Vlastník repozitáře
+   * @param {string} repo - Název repozitáře
+   * @param {string} branchName - Název větve
+   * @returns {Promise<Object>} Informace o větvi
+   */
+  async getBranch(owner, repo, branchName) {
+    try {
+      const { data } = await this.octokit.repos.getBranch({
+        owner,
+        repo,
+        branch: branchName
+      });
+      return data;
+    } catch (error) {
+      console.error("Error getting branch:", error);
+      throw error;
+    }
+  }
+
 }
 
 // Exportujeme instanci služby

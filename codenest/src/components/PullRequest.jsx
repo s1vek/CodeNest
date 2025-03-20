@@ -1,6 +1,7 @@
 // src/components/PullRequest.jsx
 import React, { useState, useEffect } from 'react';
 import GitHubService from '../services/github';
+import PullRequestCreator from './PullRequestCreator';
 import './PullRequest.css';
 
 /**
@@ -15,27 +16,28 @@ function PullRequest({ repository }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedPR, setExpandedPR] = useState(null);
+  const [isCreatingPR, setIsCreatingPR] = useState(false);
 
   // Načtení pull requestů při změně repozitáře
   useEffect(() => {
     if (!repository) return;
-
-    async function fetchPullRequests() {
-      try {
-        setLoading(true);
-        const [owner, repo] = repository.full_name.split('/');
-        const prs = await GitHubService.getPullRequests(owner, repo);
-        setPullRequests(prs);
-      } catch (err) {
-        console.error('Chyba při načítání pull requestů:', err);
-        setError('Nepodařilo se načíst pull requesty');
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchPullRequests();
   }, [repository]);
+
+  // Funkce pro načtení pull requestů
+  const fetchPullRequests = async () => {
+    try {
+      setLoading(true);
+      const [owner, repo] = repository.full_name.split('/');
+      const prs = await GitHubService.getPullRequests(owner, repo);
+      setPullRequests(prs);
+    } catch (err) {
+      console.error('Error loading pull requests:', err);
+      setError('Failed to load pull requests');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Zobrazení/skrytí detailů pull requestu
   const togglePRDetails = (prNumber) => {
@@ -44,6 +46,19 @@ function PullRequest({ repository }) {
     } else {
       setExpandedPR(prNumber);
     }
+  };
+
+  // Přepínání mezi seznamem PR a vytvářením nového PR
+  const toggleCreatePR = () => {
+    setIsCreatingPR(!isCreatingPR);
+    setExpandedPR(null);
+  };
+
+  // Zpracování vytvoření nového PR
+  const handlePullRequestCreated = (newPR) => {
+    // Přidáme nový PR do seznamu
+    setPullRequests([newPR, ...pullRequests]);
+    // Zůstaneme v režimu vytváření pro případné vytvoření dalšího PR
   };
 
   // Formátování data
@@ -55,15 +70,15 @@ function PullRequest({ repository }) {
       hour: '2-digit',
       minute: '2-digit'
     };
-    return new Date(dateString).toLocaleDateString('cs-CZ', options);
+    return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
   // Získání třídy CSS podle stavu PR
-  const getPRStatusClass = (state) => {
+  const getPRStatusClass = (state, merged) => {
+    if (merged) return 'status-merged';
     switch (state) {
       case 'open': return 'status-open';
       case 'closed': return 'status-closed';
-      case 'merged': return 'status-merged';
       default: return '';
     }
   };
@@ -100,7 +115,7 @@ function PullRequest({ repository }) {
   if (!repository) {
     return (
       <div className="pull-request empty-state">
-        <p>Vyberte repozitář pro zobrazení pull requestů</p>
+        <p>Select a repository to view pull requests</p>
       </div>
     );
   }
@@ -109,107 +124,141 @@ function PullRequest({ repository }) {
     <div className="pull-request">
       <h2>Pull Requests</h2>
       
-      {loading ? (
-        <div className="loading-indicator">Načítání pull requestů...</div>
-      ) : error ? (
-        <div className="error-message">{error}</div>
+      <div className="pr-controls">
+        <button 
+          className="create-pr-toggle-button"
+          onClick={toggleCreatePR}
+        >
+          {isCreatingPR ? 'View Pull Requests' : 'Create Pull Request'}
+        </button>
+      </div>
+      
+      {isCreatingPR ? (
+        <PullRequestCreator 
+          repository={repository} 
+          onPullRequestCreated={handlePullRequestCreated}
+        />
       ) : (
-        <div className="pr-list">
-          {pullRequests.length === 0 ? (
-            <div className="no-prs">Tento repozitář nemá žádné pull requesty</div>
+        <>
+          {loading ? (
+            <div className="loading-indicator">Loading pull requests...</div>
+          ) : error ? (
+            <div className="error-message">{error}</div>
           ) : (
-            pullRequests.map(pr => (
-              <div 
-                key={pr.id} 
-                className={`pr-item ${expandedPR === pr.number ? 'expanded' : ''}`}
-              >
-                <div className="pr-header" onClick={() => togglePRDetails(pr.number)}>
-                  <div className="pr-title-container">
-                    {getPRStatusIcon(pr.state, pr.merged)}
-                    <span className="pr-title">{pr.title}</span>
-                  </div>
-                  
-                  <div className="pr-meta">
-                    <span className={`pr-status ${getPRStatusClass(pr.state)}`}>
-                      {getPRStatusText(pr.state, pr.merged)}
-                    </span>
-                    <span className="pr-number">#{pr.number}</span>
-                  </div>
+            <div className="pr-list">
+              {pullRequests.length === 0 ? (
+                <div className="no-prs">
+                  This repository doesn't have any pull requests
+                  <button 
+                    className="create-first-pr-button"
+                    onClick={toggleCreatePR}
+                  >
+                    Create your first Pull Request
+                  </button>
                 </div>
-                
-                <div className="pr-info">
-                  <div className="pr-author">
-                    <img 
-                      src={pr.user.avatar_url} 
-                      alt={pr.user.login} 
-                      className="author-avatar"
-                    />
-                    <span>{pr.user.login}</span> opened this pull request on {formatDate(pr.created_at)}
-                  </div>
-                </div>
-                
-                {expandedPR === pr.number && (
-                  <div className="pr-details">
-                    <div className="pr-description">
-                      {pr.body ? (
-                        <p>{pr.body}</p>
-                      ) : (
-                        <p className="no-description">Bez popisu</p>
-                      )}
+              ) : (
+                pullRequests.map(pr => (
+                  <div 
+                    key={pr.id} 
+                    className={`pr-item ${expandedPR === pr.number ? 'expanded' : ''}`}
+                  >
+                    <div className="pr-header" onClick={() => togglePRDetails(pr.number)}>
+                      <div className="pr-title-container">
+                        {getPRStatusIcon(pr.state, pr.merged)}
+                        <span className="pr-title">{pr.title}</span>
+                      </div>
+                      
+                      <div className="pr-meta">
+                        <span className={`pr-status ${getPRStatusClass(pr.state, pr.merged)}`}>
+                          {getPRStatusText(pr.state, pr.merged)}
+                        </span>
+                        <span className="pr-number">#{pr.number}</span>
+                      </div>
                     </div>
                     
-                    <div className="pr-stats">
-                      <div className="stats-item">
-                        <svg viewBox="0 0 16 16" width="16" height="16">
-                          <path fillRule="evenodd" d="M1.5 2.75a.25.25 0 01.25-.25h12.5a.25.25 0 01.25.25v10.5a.25.25 0 01-.25.25H1.75a.25.25 0 01-.25-.25V2.75zM1.75 1A1.75 1.75 0 000 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25V2.75A1.75 1.75 0 0014.25 1H1.75z"></path><path fillRule="evenodd" d="M3.5 5.75c0-.69.56-1.25 1.25-1.25h6.5a1.25 1.25 0 110 2.5h-6.5A1.25 1.25 0 013.5 5.75zM3.5 9.25c0-.69.56-1.25 1.25-1.25h6.5a1.25 1.25 0 110 2.5h-6.5A1.25 1.25 0 013.5 9.25z"></path>
-                        </svg>
-                        <span className="stats-label">Commits:</span>
-                        <span className="stats-value">{pr.commits}</span>
-                      </div>
-                      <div className="stats-item">
-                        <svg viewBox="0 0 16 16" width="16" height="16">
-                          <path fillRule="evenodd" d="M3.75 1.5a.25.25 0 00-.25.25v11.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25V6H9.75A1.75 1.75 0 018 4.25V1.5H3.75zm5.75.56v2.19c0 .138.112.25.25.25h2.19L9.5 2.06zM2 1.75C2 .784 2.784 0 3.75 0h5.086c.464 0 .909.184 1.237.513l3.414 3.414c.329.328.513.773.513 1.237v8.086A1.75 1.75 0 0112.25 15h-8.5A1.75 1.75 0 012 13.25V1.75z"></path>
-                        </svg>
-                        <span className="stats-label">Soubory:</span>
-                        <span className="stats-value">{pr.changed_files}</span>
-                      </div>
-                      <div className="stats-item additions">
-                        <svg viewBox="0 0 16 16" width="16" height="16">
-                          <path fillRule="evenodd" d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 110 1.5H8.5v4.25a.75.75 0 11-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"></path>
-                        </svg>
-                        <span className="stats-label">Přidáno:</span>
-                        <span className="stats-value">+{pr.additions}</span>
-                      </div>
-                      <div className="stats-item deletions">
-                        <svg viewBox="0 0 16 16" width="16" height="16">
-                          <path fillRule="evenodd" d="M2.75 7.5a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H2.75z"></path>
-                        </svg>
-                        <span className="stats-label">Odebráno:</span>
-                        <span className="stats-value">-{pr.deletions}</span>
+                    <div className="pr-info">
+                      <div className="pr-author">
+                        <img 
+                          src={pr.user?.avatar_url} 
+                          alt={pr.user?.login} 
+                          className="author-avatar"
+                        />
+                        <span>{pr.user?.login}</span> opened this pull request on {formatDate(pr.created_at)}
                       </div>
                     </div>
+                    
+                    {expandedPR === pr.number && (
+                      <div className="pr-details">
+                        <div className="pr-description">
+                          {pr.body ? (
+                            <p>{pr.body}</p>
+                          ) : (
+                            <p className="no-description">No description provided</p>
+                          )}
+                        </div>
+                        
+                        <div className="pr-branch-info">
+                          <div className="branch-details">
+                            <span className="from-branch">{pr.head.ref}</span>
+                            <span className="arrow-icon">→</span>
+                            <span className="to-branch">{pr.base.ref}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="pr-stats">
+                          <div className="stats-item">
+                            <svg viewBox="0 0 16 16" width="16" height="16">
+                              <path fillRule="evenodd" d="M1.5 2.75a.25.25 0 01.25-.25h12.5a.25.25 0 01.25.25v10.5a.25.25 0 01-.25.25H1.75a.25.25 0 01-.25-.25V2.75zM1.75 1A1.75 1.75 0 000 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25V2.75A1.75 1.75 0 0014.25 1H1.75z"></path><path fillRule="evenodd" d="M3.5 5.75c0-.69.56-1.25 1.25-1.25h6.5a1.25 1.25 0 110 2.5h-6.5A1.25 1.25 0 013.5 5.75zM3.5 9.25c0-.69.56-1.25 1.25-1.25h6.5a1.25 1.25 0 110 2.5h-6.5A1.25 1.25 0 013.5 9.25z"></path>
+                            </svg>
+                            <span className="stats-label">Commits:</span>
+                            <span className="stats-value">{pr.commits}</span>
+                          </div>
+                          <div className="stats-item">
+                            <svg viewBox="0 0 16 16" width="16" height="16">
+                              <path fillRule="evenodd" d="M3.75 1.5a.25.25 0 00-.25.25v11.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25V6H9.75A1.75 1.75 0 018 4.25V1.5H3.75zm5.75.56v2.19c0 .138.112.25.25.25h2.19L9.5 2.06zM2 1.75C2 .784 2.784 0 3.75 0h5.086c.464 0 .909.184 1.237.513l3.414 3.414c.329.328.513.773.513 1.237v8.086A1.75 1.75 0 0112.25 15h-8.5A1.75 1.75 0 012 13.25V1.75z"></path>
+                            </svg>
+                            <span className="stats-label">Files:</span>
+                            <span className="stats-value">{pr.changed_files}</span>
+                          </div>
+                          <div className="stats-item additions">
+                            <svg viewBox="0 0 16 16" width="16" height="16">
+                              <path fillRule="evenodd" d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 110 1.5H8.5v4.25a.75.75 0 11-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"></path>
+                            </svg>
+                            <span className="stats-label">Additions:</span>
+                            <span className="stats-value">+{pr.additions}</span>
+                          </div>
+                          <div className="stats-item deletions">
+                            <svg viewBox="0 0 16 16" width="16" height="16">
+                              <path fillRule="evenodd" d="M2.75 7.5a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H2.75z"></path>
+                            </svg>
+                            <span className="stats-label">Deletions:</span>
+                            <span className="stats-value">-{pr.deletions}</span>
+                          </div>
+                        </div>
 
-                    {pr.html_url && (
-                      <div className="pr-actions">
-                        <a 
-                          href={pr.html_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="view-on-github"
-                        >
-                          Zobrazit na GitHubu
-                          <svg viewBox="0 0 16 16" width="12" height="12">
-                            <path fillRule="evenodd" d="M10.604 1h4.146a.25.25 0 01.25.25v4.146a.25.25 0 01-.427.177L13.03 4.03 9.28 7.78a.75.75 0 01-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0110.604 1zM3.75 2A1.75 1.75 0 002 3.75v8.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 12.25v-3.5a.75.75 0 00-1.5 0v3.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-8.5a.25.25 0 01.25-.25h3.5a.75.75 0 000-1.5h-3.5z"></path>
-                          </svg>
-                        </a>
+                        {pr.html_url && (
+                          <div className="pr-actions">
+                            <a 
+                              href={pr.html_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="view-on-github"
+                            >
+                              View on GitHub
+                              <svg viewBox="0 0 16 16" width="12" height="12">
+                                <path fillRule="evenodd" d="M10.604 1h4.146a.25.25 0 01.25.25v4.146a.25.25 0 01-.427.177L13.03 4.03 9.28 7.78a.75.75 0 01-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0110.604 1zM3.75 2A1.75 1.75 0 002 3.75v8.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 12.25v-3.5a.75.75 0 00-1.5 0v3.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-8.5a.25.25 0 01.25-.25h3.5a.75.75 0 000-1.5h-3.5z"></path>
+                              </svg>
+                            </a>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-            ))
+                ))
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );

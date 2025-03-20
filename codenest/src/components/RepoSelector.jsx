@@ -112,13 +112,13 @@ function RepoSelector({ onSelectRepo }) {
       </div>
 
       {loading ? (
-        <div className="loading-indicator">Načítání repozitářů...</div>
+        <div className="loading-indicator">Loading repositories...</div>
       ) : error ? (
         <div className="error-message">{error}</div>
       ) : (
         <div className="repositories-list">
           {filteredRepos.length === 0 ? (
-            <div className="no-repos">Nenalezeny žádné repozitáře</div>
+            <div className="no-repos">No repositories found</div>
           ) : (
             filteredRepos.map(repo => (
               <div 
