@@ -290,6 +290,35 @@ class GitHubService {
       throw error;
     }
   }
+
+  async createCommitWithBase64(owner, repo, path, message, base64Content, branch, sha) {
+    try {
+      const params = {
+        owner,
+        repo,
+        path,
+        message,
+        content: base64Content
+      };
+
+      // Přidáme SHA, pokud je k dispozici (pro aktualizaci existujícího souboru)
+      if (sha) {
+        params.sha = sha;
+      }
+
+      // Přidáme větev, pokud je zadaná
+      if (branch) {
+        params.branch = branch;
+      }
+
+      const { data } = await this.octokit.repos.createOrUpdateFileContents(params);
+      return data;
+    } catch (error) {
+      console.error("Chyba při vytváření commitu:", error);
+      throw error;
+    }
+  }
+
 }
 
 // Exportujeme instanci služby

@@ -7,6 +7,7 @@ import RepoSelector from './components/RepoSelector';
 import CommitHistory from './components/CommitHistory';
 import FileViewer from './components/FileViewer';
 import PullRequest from './components/PullRequest';
+import FileUpload from './components/FileUpload';
 import './App.css';
 
 function AppContent() {
@@ -56,6 +57,10 @@ function AppContent() {
               <FileViewer repository={selectedRepo} />
             )}
             
+            {activeTab === 'upload' && (
+              <FileUpload repository={selectedRepo} />
+            )}
+            
             {activeTab === 'pulls' && (
               <PullRequest repository={selectedRepo} />
             )}
@@ -74,4 +79,4 @@ function App() {
   );
 }
 
-export default App;
+export default App; 
