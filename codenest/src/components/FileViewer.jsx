@@ -18,18 +18,45 @@ function FileViewer({ repository }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileContent, setFileContent] = useState(null);
   const [loadingContent, setLoadingContent] = useState(false);
+  const [branches, setBranches] = useState([]);
+  const [currentBranch, setCurrentBranch] = useState('');
+  const [loadingBranches, setLoadingBranches] = useState(false);
 
-  // Načtení obsahu adresáře při změně repozitáře nebo cesty
+  // Načtení větví repozitáře
   useEffect(() => {
     if (!repository) return;
+
+    async function fetchBranches() {
+      try {
+        setLoadingBranches(true);
+        const [owner, repo] = repository.full_name.split('/');
+        const branchesData = await GitHubService.getBranches(owner, repo);
+        setBranches(branchesData);
+        
+        // Nastavení výchozí větve (obvykle main nebo master)
+        const defaultBranch = repository.default_branch || 'main';
+        setCurrentBranch(defaultBranch);
+      } catch (err) {
+        console.error('Chyba při načítání větví:', err);
+      } finally {
+        setLoadingBranches(false);
+      }
+    }
+
+    fetchBranches();
+  }, [repository]);
+
+  // Načtení obsahu adresáře při změně repozitáře, cesty nebo větve
+  useEffect(() => {
+    if (!repository || !currentBranch) return;
 
     async function fetchDirectoryContent() {
       try {
         setLoading(true);
         const [owner, repo] = repository.full_name.split('/');
-        console.log(`Načítám obsah adresáře: ${owner}/${repo}/${currentPath}`);
+        console.log(`Načítám obsah adresáře: ${owner}/${repo}/${currentPath} (větev: ${currentBranch})`);
         
-        const content = await GitHubService.getDirectoryContent(owner, repo, currentPath);
+        const content = await GitHubService.getDirectoryContent(owner, repo, currentPath, currentBranch);
         
         // Seřazení souborů - nejprve složky, pak soubory
         const sortedContent = content.sort((a, b) => {
@@ -48,11 +75,27 @@ function FileViewer({ repository }) {
     }
 
     fetchDirectoryContent();
-  }, [repository, currentPath]);
+  }, [repository, currentPath, currentBranch]);
+
+  // Změna větve
+  const handleBranchChange = (e) => {
+    const newBranch = e.target.value;
+    setCurrentBranch(newBranch);
+    // Resetujeme vybraný soubor a obsah při změně větve
+    setSelectedFile(null);
+    setFileContent(null);
+  };
 
   // Kontrola, zda je soubor PDF
   const isPdfFile = (fileName) => {
     return fileName.toLowerCase().endsWith('.pdf');
+  };
+
+  // Kontrola, zda je soubor obrázek
+  const isImageFile = (fileName) => {
+    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp'];
+    const lowerCaseName = fileName.toLowerCase();
+    return imageExtensions.some(ext => lowerCaseName.endsWith(ext));
   };
 
   // Zpracování kliknutí na soubor/složku
@@ -69,16 +112,25 @@ function FileViewer({ repository }) {
         setLoadingContent(true);
         
         const [owner, repo] = repository.full_name.split('/');
-        console.log(`Načítám soubor: ${owner}/${repo}/${file.path}`);
+        console.log(`Načítám soubor: ${owner}/${repo}/${file.path} (větev: ${currentBranch})`);
         
-        // Pro PDF soubory nemusíme načítat obsah, jen uložíme URL
+        // Pro PDF soubory
         if (isPdfFile(file.name)) {
           setFileContent({
             isPdf: true,
             pdfUrl: file.download_url
           });
-        } else {
-          // Pro ostatní soubory načteme obsah
+        } 
+        // Pro obrázkové soubory
+        else if (isImageFile(file.name)) {
+          setFileContent({
+            isImage: true,
+            imageUrl: file.download_url,
+            fileName: file.name
+          });
+        }
+        // Pro ostatní soubory načteme obsah
+        else {
           try {
             const response = await fetch(file.download_url);
             if (!response.ok) {
@@ -93,7 +145,7 @@ function FileViewer({ repository }) {
             
             // Záložní metoda přes GitHubService
             try {
-              const content = await GitHubService.getFileContent(owner, repo, file.path);
+              const content = await GitHubService.getFileContent(owner, repo, file.path, currentBranch);
               setFileContent(content);
             } catch (serviceErr) {
               console.error('Chyba při načítání souboru pomocí služby:', serviceErr);
@@ -108,6 +160,30 @@ function FileViewer({ repository }) {
     } finally {
       setLoadingContent(false);
     }
+  };
+
+  // Stažení vybraného souboru
+  const handleDownloadFile = () => {
+    if (!selectedFile || !selectedFile.download_url) return;
+    
+    // Vytvoření a kliknutí na dočasný odkaz pro stažení
+    const downloadLink = document.createElement('a');
+    downloadLink.href = selectedFile.download_url;
+    downloadLink.download = selectedFile.name;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
+
+  // Stažení celého repozitáře
+  const handleDownloadRepo = () => {
+    if (!repository) return;
+    
+    const [owner, repo] = repository.full_name.split('/');
+    const zipUrl = `https://github.com/${owner}/${repo}/archive/refs/heads/${currentBranch}.zip`;
+    
+    // Otevření odkazu na stažení archivu repozitáře
+    window.open(zipUrl, '_blank');
   };
 
   // Navigace zpět o úroveň výše
@@ -165,6 +241,15 @@ function FileViewer({ repository }) {
             <path fillRule="evenodd" d="M5 1H3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V3a2 2 0 00-2-2h-3v2h3a1 1 0 110 2H9.5v1H12a1 1 0 110 2H9.5v1H12a1 1 0 110 2H9.5v1h3a1 1 0 01.99.84l.01.16v.54l-.05.3A1 1 0 0113 13H3a1 1 0 01-.99-.84L2 12V3a1 1 0 01.99-.84L3 2h2V1z"></path>
           </svg>
         );
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+        return (
+          <svg viewBox="0 0 16 16" width="16" height="16" className="file-icon image-icon">
+            <path fillRule="evenodd" d="M1.75 2.5a.25.25 0 00-.25.25v10.5c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25V2.75a.25.25 0 00-.25-.25H1.75zM0 2.75C0 1.784.784 1 1.75 1h12.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0114.25 15H1.75A1.75 1.75 0 010 13.25V2.75zm10.75 10.95L2.22 7.21a.75.75 0 01.03-1.06L2.22 7.21l8.5 6.5a.75.75 0 101.06-1.02l-.03-.03zM5 7a1 1 0 100-2 1 1 0 000 2z"></path>
+          </svg>
+        );
       default:
         return (
           <svg viewBox="0 0 16 16" width="16" height="16" className="file-icon default-icon">
@@ -219,7 +304,7 @@ function FileViewer({ repository }) {
   const renderFileContent = () => {
     if (!fileContent) return null;
 
-    // Pokud je to PDF, použijeme <iframe> pro zobrazení
+    // Pro PDF soubory
     if (fileContent.isPdf && fileContent.pdfUrl) {
       return (
         <div className="pdf-container">
@@ -244,6 +329,19 @@ function FileViewer({ repository }) {
       );
     }
     
+    // Pro obrázkové soubory
+    if (fileContent.isImage && fileContent.imageUrl) {
+      return (
+        <div className="image-container">
+          <img 
+            src={fileContent.imageUrl} 
+            alt={fileContent.fileName}
+            className="image-viewer"
+          />
+        </div>
+      );
+    }
+    
     // Pro ostatní soubory zobrazíme obsah jako text
     return (
       <pre className={`code-content ${selectedFile ? getLanguageClass(selectedFile.name) : ''}`}>
@@ -263,6 +361,48 @@ function FileViewer({ repository }) {
   return (
     <div className="file-viewer">
       <h2>File Explorer</h2>
+      
+      <div className="file-controls">
+        <div className="branch-selector">
+          <label htmlFor="branch-select">Větev:</label>
+          <select 
+            id="branch-select"
+            value={currentBranch}
+            onChange={handleBranchChange}
+            disabled={loadingBranches}
+            className="branch-select"
+          >
+            {loadingBranches ? (
+              <option>Načítání větví...</option>
+            ) : (
+              branches.map(branch => (
+                <option key={branch.name} value={branch.name}>
+                  {branch.name}
+                </option>
+              ))
+            )}
+          </select>
+        </div>
+        
+        <div className="download-options">
+          <button 
+            className="download-repo-button"
+            onClick={handleDownloadRepo}
+          >
+            Stáhnout repozitář
+          </button>
+          
+          {selectedFile && (
+            <button 
+              className="download-file-button"
+              onClick={handleDownloadFile}
+              disabled={!selectedFile.download_url}
+            >
+              Stáhnout soubor
+            </button>
+          )}
+        </div>
+      </div>
       
       {renderBreadcrumbs()}
       
