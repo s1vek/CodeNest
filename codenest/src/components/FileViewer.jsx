@@ -396,7 +396,7 @@ function FileViewer({ repository }) {
   if (!repository) {
     return (
       <div className="file-viewer empty-state">
-        <p>Vyberte repozitář pro zobrazení souborů</p>
+        <p> Select a repository to view files</p>
       </div>
     );
   }
@@ -407,7 +407,7 @@ function FileViewer({ repository }) {
       
       <div className="file-controls">
         <div className="branch-selector">
-          <label htmlFor="branch-select">Větev:</label>
+          <label htmlFor="branch-select">Branch:</label>
           <select 
             id="branch-select"
             value={currentBranch}
@@ -416,7 +416,7 @@ function FileViewer({ repository }) {
             className="branch-select"
           >
             {loadingBranches ? (
-              <option>Načítání větví...</option>
+              <option>Loading branches...</option>
             ) : (
               branches.map(branch => (
                 <option key={branch.name} value={branch.name}>
@@ -432,7 +432,7 @@ function FileViewer({ repository }) {
             className="download-repo-button"
             onClick={handleDownloadRepo}
           >
-            Stáhnout repozitář
+            Download repository
           </button>
           
           {selectedFile && (
@@ -442,7 +442,7 @@ function FileViewer({ repository }) {
                 onClick={handleDownloadFile}
                 disabled={!selectedFile.download_url}
               >
-                Stáhnout soubor
+                Download a file
               </button>
               
               {isFileEditable() && !isEditing && (
@@ -451,7 +451,7 @@ function FileViewer({ repository }) {
                   onClick={handleEditFile}
                   disabled={loading || loadingContent}
                 >
-                  Upravit soubor
+                  Edit a file
                 </button>
               )}
             </>
@@ -473,11 +473,11 @@ function FileViewer({ repository }) {
           )}
 
           {loading ? (
-            <div className="loading-indicator">Načítání souborů...</div>
+            <div className="loading-indicator">Loading files...</div>
           ) : error ? (
             <div className="error-message">{error}</div>
           ) : files.length === 0 ? (
-            <div className="empty-directory">Složka je prázdná</div>
+            <div className="empty-directory"> Folder is empty</div>
           ) : (
             files.map(file => (
               <div 
@@ -503,7 +503,7 @@ function FileViewer({ repository }) {
                 onSave={handleFileSaved}
               />
             ) : loadingContent ? (
-              <div className="loading-content">Načítání obsahu souboru...</div>
+              <div className="loading-content">Loading the contents of a file...</div>
             ) : fileContent ? (
               <>
                 <div className="file-header">
@@ -525,7 +525,7 @@ function FileViewer({ repository }) {
             ) : null
           ) : (
             <div className="no-file-selected">
-              <p>Vyberte soubor pro zobrazení obsahu</p>
+              <p>Select a file to view the contents</p>
             </div>
           )}
         </div>

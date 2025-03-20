@@ -157,14 +157,14 @@ function FileEditor({ file, branch, repositoryName, onClose, onSave }) {
   return (
     <div className="file-editor">
       <div className="editor-header">
-        <h3>Úprava: {file.name}</h3>
+        <h3>Edit: {file.name}</h3>
         <div className="editor-actions">
           <button 
             className="cancel-button" 
             onClick={handleCancel}
             disabled={saving}
           >
-            Zrušit
+            Cancel
           </button>
           <button 
             className="save-button" 
@@ -208,8 +208,8 @@ function FileEditor({ file, branch, repositoryName, onClose, onSave }) {
           ></textarea>
         ) : (
           <div className="binary-file-notice">
-            <p>Tento typ souboru nelze editovat přes webové rozhraní.</p>
-            <p>Podporovány jsou pouze textové soubory.</p>
+            <p>This file type cannot be edited via the web interface.</p>
+            <p>Only text files are supported.</p>
           </div>
         )}
       </div>

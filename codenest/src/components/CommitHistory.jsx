@@ -109,14 +109,14 @@ function CommitHistory({ repository }) {
       <h2>Commit History</h2>
       
       {loading ? (
-        <div className="loading-indicator">Načítání commitů...</div>
+        <div className="loading-indicator">Loading commits...</div>
       ) : error ? (
         <div className="error-message">{error}</div>
       ) : (
         <>
           <div className="commits-list">
             {commits.length === 0 ? (
-              <div className="no-commits">Tento repozitář nemá žádné commity</div>
+              <div className="no-commits">There are no commits in this repository</div>
             ) : (
               commits.map((commit) => (
                 <div 
@@ -163,7 +163,7 @@ function CommitHistory({ repository }) {
                           </div>
                           
                           <div className="changed-files">
-                            <h4>Změněné soubory:</h4>
+                            <h4>Changed files:</h4>
                             <ul className="files-list">
                               {commitDetails.files.map((file, index) => (
                                 <li key={index} className={`file-item ${getFileStatusClass(file.status)}`}>
@@ -184,7 +184,7 @@ function CommitHistory({ repository }) {
                           </div>
                         </>
                       ) : (
-                        <div className="detail-error">Nepodařilo se načíst detaily commitu</div>
+                        <div className="detail-error">Failed to load commit details</div>
                       )}
                     </div>
                   )}
@@ -199,15 +199,15 @@ function CommitHistory({ repository }) {
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
             >
-              Předchozí
+              Previous
             </button>
-            <span className="page-indicator">Stránka {page}</span>
+            <span className="page-indicator">Page {page}</span>
             <button 
               className="pagination-button next"
               onClick={() => handlePageChange(page + 1)}
               disabled={!hasNextPage}
             >
-              Další
+              Next
             </button>
           </div>
         </>

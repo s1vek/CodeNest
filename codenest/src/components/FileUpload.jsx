@@ -232,14 +232,14 @@ function FileUpload({ repository }) {
   if (!repository) {
     return (
       <div className="file-upload empty-state">
-        <p>Vyberte repozitář pro nahrávání souborů</p>
+        <p>Select a repository for uploading files</p>
       </div>
     );
   }
 
   return (
     <div className="file-upload">
-      <h2>Nahrát nový soubor</h2>
+      <h2>Upload new file</h2>
       
       {error && (
         <div className="upload-error">
@@ -258,7 +258,7 @@ function FileUpload({ repository }) {
           <h3>Vyberte umístění</h3>
           
           <div className="form-group">
-            <label htmlFor="branch-select">Větev:</label>
+            <label htmlFor="branch-select">Branch:</label>
             <select 
               id="branch-select"
               value={currentBranch}
@@ -267,7 +267,7 @@ function FileUpload({ repository }) {
               className="form-control"
             >
               {loadingBranches ? (
-                <option>Načítání větví...</option>
+                <option>Loading branches...</option>
               ) : (
                 branches.map(branch => (
                   <option key={branch.name} value={branch.name}>
@@ -279,7 +279,7 @@ function FileUpload({ repository }) {
           </div>
           
           <div className="form-group">
-            <label htmlFor="directory-select">Adresář:</label>
+            <label htmlFor="directory-select">Directory:</label>
             <select 
               id="directory-select"
               value={currentPath}
@@ -297,10 +297,10 @@ function FileUpload({ repository }) {
         </div>
         
         <div className="form-section">
-          <h3>Informace o souboru</h3>
+          <h3>File info</h3>
           
           <div className="form-group">
-            <label htmlFor="file-name">Název souboru:</label>
+            <label htmlFor="file-name">File name:</label>
             <input
               id="file-name"
               type="text"
@@ -327,7 +327,7 @@ function FileUpload({ repository }) {
         </div>
         
         <div className="form-section">
-          <h3>Obsah souboru</h3>
+          <h3>File contents</h3>
           
           <div className="upload-mode-selector">
             <button 
@@ -336,7 +336,7 @@ function FileUpload({ repository }) {
               onClick={() => handleUploadModeChange('text')}
               disabled={loading}
             >
-              Vytvořit textový soubor
+              Create a text file
             </button>
             <button 
               type="button" 
@@ -344,7 +344,7 @@ function FileUpload({ repository }) {
               onClick={() => handleUploadModeChange('file')}
               disabled={loading}
             >
-              Nahrát soubor z počítače
+              Upload a file
             </button>
           </div>
           
@@ -373,7 +373,7 @@ function FileUpload({ repository }) {
               />
               {selectedFile && selectedFile.type.startsWith('text/') && (
                 <div className="preview-section">
-                  <h4>Náhled obsahu:</h4>
+                  <h4>Content preview:</h4>
                   <pre className="file-preview">
                     {fileContent.length > 1000 
                       ? fileContent.substring(0, 1000) + '...' 
