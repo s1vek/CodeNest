@@ -144,20 +144,20 @@ function CommitHistory({ repository }) {
                   {expandedCommit === commit.sha && (
                     <div className="commit-details">
                       {loadingDetails ? (
-                        <div className="loading-details">Načítání detailů commitu...</div>
+                        <div className="loading-details">Loading commits...</div>
                       ) : commitDetails ? (
                         <>
                           <div className="commit-stats">
                             <div className="stats-item added">
-                              <span className="stats-label">Přidáno:</span>
+                              <span className="stats-label">Added:</span>
                               <span className="stats-value">+{commitDetails.stats.additions}</span>
                             </div>
                             <div className="stats-item removed">
-                              <span className="stats-label">Odebráno:</span>
+                              <span className="stats-label">Removed:</span>
                               <span className="stats-value">-{commitDetails.stats.deletions}</span>
                             </div>
                             <div className="stats-item total">
-                              <span className="stats-label">Celkem souborů:</span>
+                              <span className="stats-label">Total files:</span>
                               <span className="stats-value">{commitDetails.files.length}</span>
                             </div>
                           </div>

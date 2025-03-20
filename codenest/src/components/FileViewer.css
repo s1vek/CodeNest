@@ -51,13 +51,15 @@
   border-color: #58a6ff;
 }
 
-/* Tlačítka pro stahování */
+/* Tlačítka pro stahování a úpravy */
 .download-options {
   display: flex;
   gap: 10px;
 }
 
-.download-repo-button, .download-file-button {
+.download-repo-button, 
+.download-file-button, 
+.edit-file-button {
   background-color: #238636;
   color: white;
   border: none;
@@ -68,7 +70,9 @@
   transition: background-color 0.2s;
 }
 
-.download-repo-button:hover, .download-file-button:hover {
+.download-repo-button:hover, 
+.download-file-button:hover, 
+.edit-file-button:hover {
   background-color: #2ea043;
 }
 
@@ -80,7 +84,16 @@
   background-color: #0d74e7;
 }
 
-.download-file-button:disabled {
+.edit-file-button {
+  background-color: #8957e5;
+}
+
+.edit-file-button:hover {
+  background-color: #9e6ff0;
+}
+
+.download-file-button:disabled, 
+.edit-file-button:disabled {
   background-color: #3a4a5c;
   opacity: 0.6;
   cursor: not-allowed;
@@ -200,6 +213,9 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .file-header h3 {
@@ -207,6 +223,31 @@
   font-size: 16px;
   font-weight: 500;
   color: #c9d1d9;
+}
+
+.file-edit-button {
+  background-color: transparent;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.file-edit-button:hover {
+  background-color: #383838;
+}
+
+.file-edit-button svg {
+  fill: #8b949e;
+}
+
+.file-edit-button:hover svg {
+  fill: #c9d1d9;
 }
 
 .code-content {

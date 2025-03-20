@@ -242,12 +242,15 @@ class GitHubService {
    */
   async createCommit(owner, repo, path, message, content, branch, sha) {
     try {
+      // Konverze obsahu do Base64 - oprava pro prohlížeč (nepoužívá Node.js Buffer)
+      const base64Content = btoa(unescape(encodeURIComponent(content)));
+      
       const params = {
         owner,
         repo,
         path,
         message,
-        content: Buffer.from(content).toString('base64')
+        content: base64Content
       };
 
       // Přidáme SHA, pokud je k dispozici (pro aktualizaci existujícího souboru)

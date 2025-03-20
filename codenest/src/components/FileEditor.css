@@ -1,0 +1,183 @@
+/* src/components/FileEditor.css */
+.file-editor {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+  
+  .editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2d2d2d;
+    padding: 12px 16px;
+    border-bottom: 1px solid #333;
+  }
+  
+  .editor-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #c9d1d9;
+  }
+  
+  .editor-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .cancel-button, .save-button {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .cancel-button {
+    background-color: transparent;
+    color: #c9d1d9;
+    border: 1px solid #444;
+  }
+  
+  .cancel-button:hover:not(:disabled) {
+    background-color: #383838;
+  }
+  
+  .save-button {
+    background-color: #238636;
+    color: white;
+    border: none;
+  }
+  
+  .save-button:hover:not(:disabled) {
+    background-color: #2ea043;
+  }
+  
+  .save-button:disabled, .cancel-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .editor-error {
+    padding: 10px 16px;
+    background-color: rgba(248, 81, 73, 0.1);
+    color: #f85149;
+    border-bottom: 1px solid rgba(248, 81, 73, 0.2);
+    font-size: 14px;
+  }
+  
+  .commit-form {
+    padding: 12px 16px;
+    background-color: #2d2d2d;
+    border-bottom: 1px solid #333;
+  }
+  
+  .commit-form.disabled {
+    opacity: 0.7;
+  }
+  
+  .form-group {
+    margin-bottom: 8px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: #c0c0c0;
+  }
+  
+  .commit-message-input {
+    width: 100%;
+    padding: 8px 10px;
+    background-color: #3a3a3a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: #ffffff;
+    font-size: 14px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  
+  .commit-message-input:focus {
+    outline: none;
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+  }
+  
+  .editor-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .code-editor {
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    border: none;
+    resize: none;
+    overflow: auto;
+    white-space: pre;
+    tab-size: 2;
+  }
+  
+  .code-editor:focus {
+    outline: none;
+  }
+  
+  /* Styly pro různé jazyky */
+  .code-editor.language-javascript {
+    color: #f1e05a;
+  }
+  
+  .code-editor.language-html {
+    color: #e34c26;
+  }
+  
+  .code-editor.language-css {
+    color: #563d7c;
+  }
+  
+  .code-editor.language-json {
+    color: #8be9fd;
+  }
+  
+  .binary-file-notice {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: #8b949e;
+    font-size: 16px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+  }
+  
+  /* Scrollbar styly */
+  .code-editor::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .code-editor::-webkit-scrollbar-track {
+    background: #2d2d2d;
+  }
+  
+  .code-editor::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+  }
+  
+  .code-editor::-webkit-scrollbar-thumb:hover {
+    background: #666;
+  }

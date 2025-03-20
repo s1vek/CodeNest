@@ -1,6 +1,7 @@
 // src/components/FileViewer.jsx
 import React, { useState, useEffect } from 'react';
 import GitHubService from '../services/github';
+import FileEditor from './FileEditor';
 import './FileViewer.css';
 
 /**
@@ -21,6 +22,7 @@ function FileViewer({ repository }) {
   const [branches, setBranches] = useState([]);
   const [currentBranch, setCurrentBranch] = useState('');
   const [loadingBranches, setLoadingBranches] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Načtení větví repozitáře
   useEffect(() => {
@@ -84,6 +86,7 @@ function FileViewer({ repository }) {
     // Resetujeme vybraný soubor a obsah při změně větve
     setSelectedFile(null);
     setFileContent(null);
+    setIsEditing(false);
   };
 
   // Kontrola, zda je soubor PDF
@@ -106,10 +109,12 @@ function FileViewer({ repository }) {
         setCurrentPath(file.path);
         setSelectedFile(null);
         setFileContent(null);
+        setIsEditing(false);
       } else {
         // Pokud je to soubor, načteme jeho obsah
         setSelectedFile(file);
         setLoadingContent(true);
+        setIsEditing(false);
         
         const [owner, repo] = repository.full_name.split('/');
         console.log(`Načítám soubor: ${owner}/${repo}/${file.path} (větev: ${currentBranch})`);
@@ -186,6 +191,37 @@ function FileViewer({ repository }) {
     window.open(zipUrl, '_blank');
   };
 
+  // Přepnutí do editačního režimu
+  const handleEditFile = () => {
+    if (!selectedFile || isPdfFile(selectedFile.name) || isImageFile(selectedFile.name)) return;
+    setIsEditing(true);
+  };
+
+  // Zpracování ukončení editace
+  const handleEditorClose = () => {
+    setIsEditing(false);
+  };
+
+  // Zpracování úspěšné úpravy souboru
+  const handleFileSaved = async () => {
+    // Znovu načteme aktuální adresář pro zobrazení případných změn
+    setIsEditing(false);
+    
+    // Znovu načteme obsah souboru
+    if (selectedFile) {
+      setLoadingContent(true);
+      try {
+        const [owner, repo] = repository.full_name.split('/');
+        const content = await GitHubService.getFileContent(owner, repo, selectedFile.path, currentBranch);
+        setFileContent(content);
+      } catch (err) {
+        console.error('Chyba při opětovném načítání souboru:', err);
+      } finally {
+        setLoadingContent(false);
+      }
+    }
+  };
+
   // Navigace zpět o úroveň výše
   const navigateUp = () => {
     // Rozdělení cesty podle lomítek a odebrání poslední části
@@ -195,6 +231,7 @@ function FileViewer({ repository }) {
     setCurrentPath(newPath);
     setSelectedFile(null);
     setFileContent(null);
+    setIsEditing(false);
   };
 
   // Získání ikony podle typu souboru
@@ -300,6 +337,12 @@ function FileViewer({ repository }) {
     );
   };
 
+  // Kontrola, zda je soubor editovatelný (není obrázek ani PDF)
+  const isFileEditable = () => {
+    if (!selectedFile) return false;
+    return !isPdfFile(selectedFile.name) && !isImageFile(selectedFile.name);
+  };
+
   // Vykreslení obsahu souboru
   const renderFileContent = () => {
     if (!fileContent) return null;
@@ -393,13 +436,25 @@ function FileViewer({ repository }) {
           </button>
           
           {selectedFile && (
-            <button 
-              className="download-file-button"
-              onClick={handleDownloadFile}
-              disabled={!selectedFile.download_url}
-            >
-              Stáhnout soubor
-            </button>
+            <>
+              <button 
+                className="download-file-button"
+                onClick={handleDownloadFile}
+                disabled={!selectedFile.download_url}
+              >
+                Stáhnout soubor
+              </button>
+              
+              {isFileEditable() && !isEditing && (
+                <button 
+                  className="edit-file-button"
+                  onClick={handleEditFile}
+                  disabled={loading || loadingContent}
+                >
+                  Upravit soubor
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -439,12 +494,31 @@ function FileViewer({ repository }) {
         
         <div className="file-content">
           {selectedFile ? (
-            loadingContent ? (
+            isEditing ? (
+              <FileEditor 
+                file={selectedFile}
+                branch={currentBranch}
+                repositoryName={repository.full_name}
+                onClose={handleEditorClose}
+                onSave={handleFileSaved}
+              />
+            ) : loadingContent ? (
               <div className="loading-content">Načítání obsahu souboru...</div>
             ) : fileContent ? (
               <>
                 <div className="file-header">
                   <h3>{selectedFile.name}</h3>
+                  {isFileEditable() && (
+                    <button 
+                      className="file-edit-button"
+                      onClick={handleEditFile}
+                      title="Upravit soubor"
+                    >
+                      <svg viewBox="0 0 16 16" width="16" height="16">
+                        <path fillRule="evenodd" d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25a1.75 1.75 0 01.445-.758l8.61-8.61zm1.414 1.06a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086zM11.189 6.25L9.75 4.81l-6.286 6.287a.25.25 0 00-.064.108l-.558 1.953 1.953-.558a.249.249 0 00.108-.064l6.286-6.286z"></path>
+                      </svg>
+                    </button>
+                  )}
                 </div>
                 {renderFileContent()}
               </>
