@@ -1,4 +1,3 @@
-// src/components/Header.jsx
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './Header.css';
@@ -49,7 +48,7 @@ function Header({ selectedRepo, activeTab, onTabChange, onBack, onRefresh }) {
               <svg viewBox="0 0 16 16" width="16" height="16">
                 <path fillRule="evenodd" d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.81 7h7.44a.75.75 0 010 1.5H4.81l2.97 2.97a.75.75 0 010 1.06z"></path>
               </svg>
-              Back to the selection
+              Back to selection
             </button>
             
             <button 
@@ -133,6 +132,15 @@ function Header({ selectedRepo, activeTab, onTabChange, onBack, onRefresh }) {
                 <path fillRule="evenodd" d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"></path>
               </svg>
               Pull Requests
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'issues' ? 'active' : ''}`}
+              onClick={() => onTabChange('issues')}
+            >
+              <svg viewBox="0 0 16 16" width="16" height="16">
+                <path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z"></path>
+              </svg>
+              Issues
             </button>
           </div>
         </div>

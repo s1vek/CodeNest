@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState, useCallback, useRef } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Login';
@@ -9,6 +8,7 @@ import FileViewer from './components/FileViewer';
 import PullRequest from './components/PullRequest';
 import FileUpload from './components/FileUpload';
 import BranchManager from './components/BranchManager';
+import Issues from './components/Issues';
 import './App.css';
 
 function AppContent() {
@@ -17,16 +17,15 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('commits');
   const [currentBranch, setCurrentBranch] = useState('');
   
-  // Reference na komponenty pro vyvolání obnovení
   const commitsRef = useRef();
   const branchesRef = useRef();
   const filesRef = useRef();
   const pullsRef = useRef();
+  const issuesRef = useRef();
 
   const handleSelectRepo = (repo) => {
     setSelectedRepo(repo);
     setActiveTab('commits');
-    // Resetujeme vybranou větev při změně repozitáře
     setCurrentBranch(repo.default_branch || '');
   };
 
@@ -34,24 +33,19 @@ function AppContent() {
     setSelectedRepo(null);
   };
 
-  // Callback pro výběr větve
   const handleBranchSelect = (branch) => {
     setCurrentBranch(branch);
   };
 
-  // Funkce pro obnovení aktuální komponenty s vylepšeným debugováním
   const handleRefresh = useCallback((tab) => {
     const currentTab = tab || activeTab;
     console.log(`🔄 Refreshing ${currentTab} tab...`);
     
-    // Funkce pro vyvolání fallback - pokud bude problém s referencemi
     const fallbackRefresh = () => {
       console.log("⚠️ Using fallback refresh (reload)");
-      // Jako záloha použijeme úplné obnovení stránky
       window.location.reload();
     };
     
-    // Zkusíme forceUpdate - mělo by vynutit překreslení komponenty
     try {
       switch (currentTab) {
         case 'commits':
@@ -90,8 +84,16 @@ function AppContent() {
             fallbackRefresh();
           }
           break;
+        case 'issues':
+          if (issuesRef.current && issuesRef.current.refresh) {
+            issuesRef.current.refresh();
+            console.log('✅ Issues refresh called');
+          } else {
+            console.warn('⚠️ IssuesRef or refresh method not available');
+            fallbackRefresh();
+          }
+          break;
         default:
-          // Pro ostatní záložky prostě obnovíme stránku
           console.log(`ℹ️ Refresh not implemented for tab: ${currentTab}`);
           fallbackRefresh();
           break;
@@ -163,6 +165,13 @@ function AppContent() {
               <PullRequest 
                 repository={selectedRepo} 
                 ref={pullsRef}
+              />
+            )}
+            
+            {activeTab === 'issues' && (
+              <Issues 
+                repository={selectedRepo}
+                ref={issuesRef}
               />
             )}
           </div>

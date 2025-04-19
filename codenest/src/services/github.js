@@ -1,40 +1,24 @@
-// src/services/github.js
 import { Octokit } from "@octokit/rest";
 
-/**
- * Služba pro komunikaci s GitHub API
- */
 class GitHubService {
   constructor() {
     this.octokit = null;
   }
 
-  /**
-   * Inicializace GitHub klienta s tokenem
-   * @param {string} token - GitHub Personal Access Token
-   */
   init(token) {
     this.octokit = new Octokit({ auth: token });
   }
 
-  /**
-   * Získání informací o přihlášeném uživateli
-   * @returns {Promise<Object>} Data uživatele
-   */
   async getUser() {
     try {
       const { data } = await this.octokit.users.getAuthenticated();
       return data;
     } catch (error) {
-      console.error("Chyba při získávání dat uživatele:", error);
+      console.error("Error fetching user data:", error);
       throw error;
     }
   }
 
-  /**
-   * Získání seznamu repozitářů uživatele
-   * @returns {Promise<Array>} Seznam repozitářů
-   */
   async getRepositories() {
     try {
       const { data } = await this.octokit.repos.listForAuthenticatedUser({
@@ -43,17 +27,11 @@ class GitHubService {
       });
       return data;
     } catch (error) {
-      console.error("Chyba při získávání repozitářů:", error);
+      console.error("Error fetching repositories:", error);
       throw error;
     }
   }
 
-  /**
-   * Získání detailů repozitáře
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @returns {Promise<Object>} Data repozitáře
-   */
   async getRepository(owner, repo) {
     try {
       const { data } = await this.octokit.repos.get({
@@ -62,17 +40,11 @@ class GitHubService {
       });
       return data;
     } catch (error) {
-      console.error("Chyba při získávání repozitáře:", error);
+      console.error("Error fetching repository:", error);
       throw error;
     }
   }
 
-  /**
-   * Získání větví repozitáře
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @returns {Promise<Array>} Seznam větví
-   */
   async getBranches(owner, repo) {
     try {
       const { data } = await this.octokit.repos.listBranches({
@@ -82,19 +54,11 @@ class GitHubService {
       });
       return data;
     } catch (error) {
-      console.error("Chyba při získávání větví:", error);
+      console.error("Error fetching branches:", error);
       throw error;
     }
   }
 
-  /**
-   * Získání commitů repozitáře
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {number} page - Číslo stránky
-   * @param {string} branch - Název větve (volitelné)
-   * @returns {Promise<Array>} Seznam commitů
-   */
   async getCommits(owner, repo, page = 1, branch) {
     try {
       const params = {
@@ -104,7 +68,6 @@ class GitHubService {
         page
       };
 
-      // Pokud je zadaná větev, přidáme ji do parametrů
       if (branch) {
         params.sha = branch;
       }
@@ -112,18 +75,11 @@ class GitHubService {
       const { data } = await this.octokit.repos.listCommits(params);
       return data;
     } catch (error) {
-      console.error("Chyba při získávání commitů:", error);
+      console.error("Error fetching commits:", error);
       throw error;
     }
   }
 
-  /**
-   * Získání detailů commitu
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {string} sha - SHA identifikátor commitu
-   * @returns {Promise<Object>} Detaily commitu
-   */
   async getCommitDetails(owner, repo, sha) {
     try {
       const { data } = await this.octokit.repos.getCommit({
@@ -133,19 +89,11 @@ class GitHubService {
       });
       return data;
     } catch (error) {
-      console.error("Chyba při získávání detailů commitu:", error);
+      console.error("Error fetching commit details:", error);
       throw error;
     }
   }
 
-  /**
-   * Získání obsahu adresáře v repozitáři
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {string} path - Cesta k adresáři (prázdná pro kořenový adresář)
-   * @param {string} branch - Název větve (volitelné)
-   * @returns {Promise<Array>} Seznam souborů a adresářů
-   */
   async getDirectoryContent(owner, repo, path = "", branch) {
     try {
       const params = {
@@ -154,29 +102,19 @@ class GitHubService {
         path
       };
 
-      // Pokud je zadaná větev, přidáme ji do parametrů
       if (branch) {
         params.ref = branch;
       }
 
       const { data } = await this.octokit.repos.getContent(params);
 
-      // GitHub API vrací pole pro adresáře, objekt pro soubory
       return Array.isArray(data) ? data : [data];
     } catch (error) {
-      console.error("Chyba při získávání obsahu adresáře:", error);
+      console.error("Error fetching directory content:", error);
       throw error;
     }
   }
 
-  /**
-   * Získání obsahu souboru
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {string} path - Cesta k souboru
-   * @param {string} branch - Název větve (volitelné)
-   * @returns {Promise<Object>} Obsah souboru a metadata
-   */
   async getFileContent(owner, repo, path, branch) {
     try {
       const params = {
@@ -188,14 +126,12 @@ class GitHubService {
         }
       };
 
-      // Pokud je zadaná větev, přidáme ji do parametrů
       if (branch) {
         params.ref = branch;
       }
 
       const { data } = await this.octokit.repos.getContent(params);
       
-      // Kontrola, zda je výsledek objekt s content vlastností (Base64 kódované)
       if (data && data.content && data.encoding === 'base64') {
         return {
           content: Buffer.from(data.content, 'base64').toString('utf-8'),
@@ -204,7 +140,6 @@ class GitHubService {
           path: data.path
         };
       } 
-      // Pokud API vrátí přímo obsah (není Base64 kódovaný)
       else if (typeof data === 'string') {
         return {
           content: data,
@@ -212,10 +147,9 @@ class GitHubService {
           name: path.split('/').pop()
         };
       }
-      // Jiný formát dat
       else {
         if (typeof data === 'object' && !data.content) {
-          throw new Error("GitHub API nevrátilo obsah souboru - možná je soubor příliš velký");
+          throw new Error("GitHub API did not return file content - file may be too large");
         }
         return {
           content: JSON.stringify(data, null, 2),
@@ -224,25 +158,13 @@ class GitHubService {
         };
       }
     } catch (error) {
-      console.error("Chyba při získávání obsahu souboru:", error);
+      console.error("Error fetching file content:", error);
       throw error;
     }
   }
 
-  /**
-   * Vytvoření nebo aktualizace souboru (commit)
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {string} path - Cesta k souboru
-   * @param {string} message - Commit message
-   * @param {string} content - Obsah souboru
-   * @param {string} branch - Název větve
-   * @param {string} sha - SHA existujícího souboru (při aktualizaci)
-   * @returns {Promise<Object>} Výsledek operace
-   */
   async createCommit(owner, repo, path, message, content, branch, sha) {
     try {
-      // Konverze obsahu do Base64 - oprava pro prohlížeč (nepoužívá Node.js Buffer)
       const base64Content = btoa(unescape(encodeURIComponent(content)));
       
       const params = {
@@ -253,12 +175,10 @@ class GitHubService {
         content: base64Content
       };
 
-      // Přidáme SHA, pokud je k dispozici (pro aktualizaci existujícího souboru)
       if (sha) {
         params.sha = sha;
       }
 
-      // Přidáme větev, pokud je zadaná
       if (branch) {
         params.branch = branch;
       }
@@ -266,17 +186,11 @@ class GitHubService {
       const { data } = await this.octokit.repos.createOrUpdateFileContents(params);
       return data;
     } catch (error) {
-      console.error("Chyba při vytváření commitu:", error);
+      console.error("Error creating commit:", error);
       throw error;
     }
   }
 
-  /**
-   * Získání pull requestů repozitáře
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @returns {Promise<Array>} Seznam pull requestů
-   */
   async getPullRequests(owner, repo) {
     try {
       const { data } = await this.octokit.pulls.list({
@@ -286,22 +200,11 @@ class GitHubService {
       });
       return data;
     } catch (error) {
-      console.error("Chyba při získávání pull requestů:", error);
+      console.error("Error fetching pull requests:", error);
       throw error;
     }
   }
 
-  /**
-   * Vytvoření commitu s obsahem v Base64
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {string} path - Cesta k souboru
-   * @param {string} message - Commit message
-   * @param {string} base64Content - Obsah souboru v Base64
-   * @param {string} branch - Název větve
-   * @param {string} sha - SHA existujícího souboru (při aktualizaci)
-   * @returns {Promise<Object>} Výsledek operace
-   */
   async createCommitWithBase64(owner, repo, path, message, base64Content, branch, sha) {
     try {
       const params = {
@@ -312,12 +215,10 @@ class GitHubService {
         content: base64Content
       };
 
-      // Přidáme SHA, pokud je k dispozici (pro aktualizaci existujícího souboru)
       if (sha) {
         params.sha = sha;
       }
 
-      // Přidáme větev, pokud je zadaná
       if (branch) {
         params.branch = branch;
       }
@@ -325,29 +226,19 @@ class GitHubService {
       const { data } = await this.octokit.repos.createOrUpdateFileContents(params);
       return data;
     } catch (error) {
-      console.error("Chyba při vytváření commitu:", error);
+      console.error("Error creating commit:", error);
       throw error;
     }
   }
 
-  /**
-   * Vytvoření nové větve z existující
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {string} newBranchName - Název nové větve
-   * @param {string} baseBranchName - Název výchozí větve (source)
-   * @returns {Promise<Object>} Informace o vytvořené větvi
-   */
   async createBranch(owner, repo, newBranchName, baseBranchName) {
     try {
-      // 1. Získáme referenci výchozí větve
       const { data: refData } = await this.octokit.git.getRef({
         owner,
         repo,
         ref: `heads/${baseBranchName}`
       });
       
-      // 2. Vytvoříme novou větev z této reference
       const { data } = await this.octokit.git.createRef({
         owner,
         repo,
@@ -362,16 +253,8 @@ class GitHubService {
     }
   }
 
-  /**
-   * Smazání větve v repozitáři
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {string} branchName - Název větve ke smazání
-   * @returns {Promise<Object>} Výsledek operace
-   */
   async deleteBranch(owner, repo, branchName) {
     try {
-      // GitHub API používá 'refs/heads/BRANCH_NAME' formát pro smazání větve
       const { data } = await this.octokit.git.deleteRef({
         owner,
         repo,
@@ -384,13 +267,6 @@ class GitHubService {
     }
   }
 
-  /**
-   * Kontrola, zda je větev ochráněná
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {string} branchName - Název větve
-   * @returns {Promise<boolean>} True pokud je větev ochráněná
-   */
   async isBranchProtected(owner, repo, branchName) {
     try {
       const { data } = await this.octokit.repos.getBranchProtection({
@@ -400,7 +276,6 @@ class GitHubService {
       });
       return !!data;
     } catch (error) {
-      // Pokud dostaneme 404, větev není ochráněná
       if (error.status === 404) {
         return false;
       }
@@ -409,16 +284,6 @@ class GitHubService {
     }
   }
 
-  /**
-   * Vytvoření Pull Requestu
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {string} title - Název Pull Requestu
-   * @param {string} body - Popis Pull Requestu
-   * @param {string} headBranch - Název větve s změnami
-   * @param {string} baseBranch - Název cílové větve (obvykle main)
-   * @returns {Promise<Object>} Vytvořený Pull Request
-   */
   async createPullRequest(owner, repo, title, body, headBranch, baseBranch) {
     try {
       const { data } = await this.octokit.pulls.create({
@@ -436,13 +301,6 @@ class GitHubService {
     }
   }
 
-  /**
-   * Získání detailů konkrétního Pull Requestu
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {number} pull_number - Číslo Pull Requestu
-   * @returns {Promise<Object>} Detail Pull Requestu
-   */
   async getPullRequestDetails(owner, repo, pull_number) {
     try {
       const { data } = await this.octokit.pulls.get({
@@ -457,13 +315,6 @@ class GitHubService {
     }
   }
   
-  /**
-   * Získání aktuální větve ze zadané reference
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {string} branchName - Název větve
-   * @returns {Promise<Object>} Informace o větvi
-   */
   async getBranch(owner, repo, branchName) {
     try {
       const { data } = await this.octokit.repos.getBranch({
@@ -478,14 +329,6 @@ class GitHubService {
     }
   }
 
-  /**
-   * Zavření Pull Requestu
-   * @param {string} owner - Vlastník repozitáře
-   * @param {string} repo - Název repozitáře
-   * @param {number} pull_number - Číslo Pull Requestu
-   * @param {string} state - Stav ("closed" nebo "open")
-   * @returns {Promise<Object>} Aktualizovaný Pull Request
-   */
   async closePullRequest(owner, repo, pull_number, state = "closed") {
     try {
       const { data } = await this.octokit.pulls.update({
@@ -500,8 +343,111 @@ class GitHubService {
       throw error;
     }
   }
+
+  async getIssues(owner, repo, state = 'open') {
+    try {
+      const { data } = await this.octokit.issues.listForRepo({
+        owner,
+        repo,
+        state,
+        per_page: 100
+      });
+      return data;
+    } catch (error) {
+      console.error("Error fetching issues:", error);
+      throw error;
+    }
+  }
+
+  async getIssueDetails(owner, repo, issue_number) {
+    try {
+      const { data } = await this.octokit.issues.get({
+        owner,
+        repo,
+        issue_number
+      });
+      return data;
+    } catch (error) {
+      console.error("Error fetching issue details:", error);
+      throw error;
+    }
+  }
+
+  async createIssue(owner, repo, title, body, labels = []) {
+    try {
+      const { data } = await this.octokit.issues.create({
+        owner,
+        repo,
+        title,
+        body,
+        labels
+      });
+      return data;
+    } catch (error) {
+      console.error("Error creating issue:", error);
+      throw error;
+    }
+  }
+
+  async updateIssueState(owner, repo, issue_number, state) {
+    try {
+      const { data } = await this.octokit.issues.update({
+        owner,
+        repo,
+        issue_number,
+        state
+      });
+      return data;
+    } catch (error) {
+      console.error("Error updating issue state:", error);
+      throw error;
+    }
+  }
+
+  async getLabels(owner, repo) {
+    try {
+      const { data } = await this.octokit.issues.listLabelsForRepo({
+        owner,
+        repo,
+        per_page: 100
+      });
+      return data;
+    } catch (error) {
+      console.error("Error fetching labels:", error);
+      throw error;
+    }
+  }
+
+  async getIssueComments(owner, repo, issue_number) {
+    try {
+      const { data } = await this.octokit.issues.listComments({
+        owner,
+        repo,
+        issue_number,
+        per_page: 100
+      });
+      return data;
+    } catch (error) {
+      console.error("Error fetching issue comments:", error);
+      throw error;
+    }
+  }
+
+  async addIssueComment(owner, repo, issue_number, body) {
+    try {
+      const { data } = await this.octokit.issues.createComment({
+        owner,
+        repo,
+        issue_number,
+        body
+      });
+      return data;
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      throw error;
+    }
+  }
 }
 
-// Exportujeme instanci služby
 const githubService = new GitHubService();
 export default githubService;
