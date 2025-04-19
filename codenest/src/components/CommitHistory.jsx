@@ -1,16 +1,9 @@
-// src/components/CommitHistory.jsx
 import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import GitHubService from '../services/github';
 import './CommitHistory.css';
 
-/**
- * Komponenta pro zobrazení historie commitů
- * @param {Object} props - Props komponenty
- * @param {Object} props.repository - Data vybraného repozitáře
- * @returns {JSX.Element} CommitHistory komponenta
- */
+
 const CommitHistory = forwardRef(({ repository }, ref) => {
-  // State pro commity, načítání, chyby a stránkování
   const [commits, setCommits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,7 +13,6 @@ const CommitHistory = forwardRef(({ repository }, ref) => {
   const [commitDetails, setCommitDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
-  // Funkce pro načtení commitů
   const fetchCommits = useCallback(async () => {
     if (!repository) return;
     
@@ -29,7 +21,7 @@ const CommitHistory = forwardRef(({ repository }, ref) => {
       const [owner, repo] = repository.full_name.split('/');
       const commitsData = await GitHubService.getCommits(owner, repo, page);
       setCommits(commitsData);
-      setHasNextPage(commitsData.length === 10); // Pokud je 10 commitů, předpokládáme, že existuje další stránka
+      setHasNextPage(commitsData.length === 10); 
     } catch (err) {
       setError('Nepodařilo se načíst commity');
     } finally {
@@ -37,7 +29,6 @@ const CommitHistory = forwardRef(({ repository }, ref) => {
     }
   }, [repository, page]);
 
-  // Exponujeme metodu refresh přes ref
   useImperativeHandle(ref, () => ({
     refresh: () => {
       setExpandedCommit(null);
@@ -46,13 +37,11 @@ const CommitHistory = forwardRef(({ repository }, ref) => {
     }
   }));
 
-  // Načtení commitů při změně repozitáře nebo stránky
   useEffect(() => {
     if (!repository) return;
     fetchCommits();
   }, [repository, page, fetchCommits]);
 
-  // Změna stránky
   const handlePageChange = (newPage) => {
     setPage(newPage);
     setExpandedCommit(null);
@@ -81,7 +70,6 @@ const CommitHistory = forwardRef(({ repository }, ref) => {
     }
   };
 
-  // Formátování data
   const formatDate = (dateString) => {
     const options = { 
       year: 'numeric', 
@@ -93,7 +81,6 @@ const CommitHistory = forwardRef(({ repository }, ref) => {
     return new Date(dateString).toLocaleDateString('cs-CZ', options);
   };
 
-  // Získání třídy CSS podle typu změny souboru
   const getFileStatusClass = (status) => {
     switch (status) {
       case 'added': return 'file-added';
@@ -104,7 +91,6 @@ const CommitHistory = forwardRef(({ repository }, ref) => {
     }
   };
 
-  // Zkrácení SHA commitu
   const shortenSha = (sha) => sha.substring(0, 7);
 
   if (!repository) {

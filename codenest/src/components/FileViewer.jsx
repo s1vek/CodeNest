@@ -1,17 +1,9 @@
-// src/components/FileViewer.jsx
 import React, { useState, useEffect } from 'react';
 import GitHubService from '../services/github';
 import FileEditor from './FileEditor';
 import './FileViewer.css';
 
-/**
- * Komponenta pro prohlížení a procházení souborů v repozitáři
- * @param {Object} props - Props komponenty
- * @param {Object} props.repository - Data vybraného repozitáře
- * @returns {JSX.Element} FileViewer komponenta
- */
 function FileViewer({ repository }) {
-  // State pro aktuální cestu, soubory, načítání a chyby
   const [currentPath, setCurrentPath] = useState('');
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +16,6 @@ function FileViewer({ repository }) {
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Načtení větví repozitáře
   useEffect(() => {
     if (!repository) return;
 
@@ -79,39 +70,32 @@ function FileViewer({ repository }) {
     fetchDirectoryContent();
   }, [repository, currentPath, currentBranch]);
 
-  // Změna větve
   const handleBranchChange = (e) => {
     const newBranch = e.target.value;
     setCurrentBranch(newBranch);
-    // Resetujeme vybraný soubor a obsah při změně větve
     setSelectedFile(null);
     setFileContent(null);
     setIsEditing(false);
   };
 
-  // Kontrola, zda je soubor PDF
   const isPdfFile = (fileName) => {
     return fileName.toLowerCase().endsWith('.pdf');
   };
 
-  // Kontrola, zda je soubor obrázek
   const isImageFile = (fileName) => {
     const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp'];
     const lowerCaseName = fileName.toLowerCase();
     return imageExtensions.some(ext => lowerCaseName.endsWith(ext));
   };
 
-  // Zpracování kliknutí na soubor/složku
   const handleFileClick = async (file) => {
     try {
       if (file.type === 'dir') {
-        // Pokud je to složka, změníme aktuální cestu
         setCurrentPath(file.path);
         setSelectedFile(null);
         setFileContent(null);
         setIsEditing(false);
       } else {
-        // Pokud je to soubor, načteme jeho obsah
         setSelectedFile(file);
         setLoadingContent(true);
         setIsEditing(false);
@@ -119,14 +103,12 @@ function FileViewer({ repository }) {
         const [owner, repo] = repository.full_name.split('/');
         console.log(`Načítám soubor: ${owner}/${repo}/${file.path} (větev: ${currentBranch})`);
         
-        // Pro PDF soubory
         if (isPdfFile(file.name)) {
           setFileContent({
             isPdf: true,
             pdfUrl: file.download_url
           });
         } 
-        // Pro obrázkové soubory
         else if (isImageFile(file.name)) {
           setFileContent({
             isImage: true,
@@ -134,7 +116,6 @@ function FileViewer({ repository }) {
             fileName: file.name
           });
         }
-        // Pro ostatní soubory načteme obsah
         else {
           try {
             const response = await fetch(file.download_url);
@@ -142,13 +123,11 @@ function FileViewer({ repository }) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
             
-            // Získání textového obsahu
             const text = await response.text();
             setFileContent({ content: text });
           } catch (err) {
             console.error('Chyba při přímém načtení souboru:', err);
             
-            // Záložní metoda přes GitHubService
             try {
               const content = await GitHubService.getFileContent(owner, repo, file.path, currentBranch);
               setFileContent(content);
@@ -167,11 +146,9 @@ function FileViewer({ repository }) {
     }
   };
 
-  // Stažení vybraného souboru
   const handleDownloadFile = () => {
     if (!selectedFile || !selectedFile.download_url) return;
     
-    // Vytvoření a kliknutí na dočasný odkaz pro stažení
     const downloadLink = document.createElement('a');
     downloadLink.href = selectedFile.download_url;
     downloadLink.download = selectedFile.name;
@@ -180,34 +157,27 @@ function FileViewer({ repository }) {
     document.body.removeChild(downloadLink);
   };
 
-  // Stažení celého repozitáře
   const handleDownloadRepo = () => {
     if (!repository) return;
     
     const [owner, repo] = repository.full_name.split('/');
     const zipUrl = `https://github.com/${owner}/${repo}/archive/refs/heads/${currentBranch}.zip`;
     
-    // Otevření odkazu na stažení archivu repozitáře
     window.open(zipUrl, '_blank');
   };
 
-  // Přepnutí do editačního režimu
   const handleEditFile = () => {
     if (!selectedFile || isPdfFile(selectedFile.name) || isImageFile(selectedFile.name)) return;
     setIsEditing(true);
   };
 
-  // Zpracování ukončení editace
   const handleEditorClose = () => {
     setIsEditing(false);
   };
 
-  // Zpracování úspěšné úpravy souboru
   const handleFileSaved = async () => {
-    // Znovu načteme aktuální adresář pro zobrazení případných změn
     setIsEditing(false);
     
-    // Znovu načteme obsah souboru
     if (selectedFile) {
       setLoadingContent(true);
       try {
@@ -215,16 +185,14 @@ function FileViewer({ repository }) {
         const content = await GitHubService.getFileContent(owner, repo, selectedFile.path, currentBranch);
         setFileContent(content);
       } catch (err) {
-        console.error('Chyba při opětovném načítání souboru:', err);
+        console.error('Error loading file:', err);
       } finally {
         setLoadingContent(false);
       }
     }
   };
 
-  // Navigace zpět o úroveň výše
   const navigateUp = () => {
-    // Rozdělení cesty podle lomítek a odebrání poslední části
     const pathParts = currentPath.split('/').filter(part => part.length > 0);
     pathParts.pop();
     const newPath = pathParts.join('/');
@@ -234,7 +202,6 @@ function FileViewer({ repository }) {
     setIsEditing(false);
   };
 
-  // Získání ikony podle typu souboru
   const getFileIcon = (file) => {
     if (file.type === 'dir') {
       return (
@@ -244,7 +211,6 @@ function FileViewer({ repository }) {
       );
     }
     
-    // Ikona podle přípony souboru
     const extension = file.name.split('.').pop().toLowerCase();
     
     switch (extension) {
@@ -296,7 +262,6 @@ function FileViewer({ repository }) {
     }
   };
 
-  // Formátování kódu podle přípony souboru
   const getLanguageClass = (fileName) => {
     const extension = fileName.split('.').pop().toLowerCase();
     
@@ -321,7 +286,6 @@ function FileViewer({ repository }) {
     }
   };
 
-  // Zobrazení "drobečkové navigace"
   const renderBreadcrumbs = () => {
     const pathParts = ['root', ...currentPath.split('/').filter(part => part.length > 0)];
     
@@ -337,17 +301,14 @@ function FileViewer({ repository }) {
     );
   };
 
-  // Kontrola, zda je soubor editovatelný (není obrázek ani PDF)
   const isFileEditable = () => {
     if (!selectedFile) return false;
     return !isPdfFile(selectedFile.name) && !isImageFile(selectedFile.name);
   };
 
-  // Vykreslení obsahu souboru
   const renderFileContent = () => {
     if (!fileContent) return null;
 
-    // Pro PDF soubory
     if (fileContent.isPdf && fileContent.pdfUrl) {
       return (
         <div className="pdf-container">
@@ -365,14 +326,13 @@ function FileViewer({ repository }) {
               rel="noopener noreferrer"
               className="pdf-download-link"
             >
-              Otevřít PDF v novém okně
+              Open PDF in a new window
             </a>
           </div>
         </div>
       );
     }
     
-    // Pro obrázkové soubory
     if (fileContent.isImage && fileContent.imageUrl) {
       return (
         <div className="image-container">
@@ -385,7 +345,6 @@ function FileViewer({ repository }) {
       );
     }
     
-    // Pro ostatní soubory zobrazíme obsah jako text
     return (
       <pre className={`code-content ${selectedFile ? getLanguageClass(selectedFile.name) : ''}`}>
         {fileContent.content}

@@ -1,23 +1,15 @@
-// src/components/RepoSelector.jsx
 import React, { useState, useEffect } from 'react';
 import GitHubService from '../services/github';
 import './RepoSelector.css';
 
-/**
- * Komponenta pro výběr repozitáře ze seznamu
- * @param {Object} props - Props komponenty
- * @param {Function} props.onSelectRepo - Callback funkce volaná při výběru repozitáře
- * @returns {JSX.Element} RepoSelector komponenta
- */
+
 function RepoSelector({ onSelectRepo }) {
-  // State pro seznam repozitářů, filtrování a načítání
   const [repositories, setRepositories] = useState([]);
   const [filteredRepos, setFilteredRepos] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Načtení seznamu repozitářů při prvním renderu
   useEffect(() => {
     async function fetchRepositories() {
       try {
@@ -35,7 +27,6 @@ function RepoSelector({ onSelectRepo }) {
     fetchRepositories();
   }, []);
 
-  // Filtrování repozitářů podle vyhledávacího dotazu
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredRepos(repositories);
@@ -48,7 +39,6 @@ function RepoSelector({ onSelectRepo }) {
     }
   }, [searchTerm, repositories]);
 
-  // Formátování data aktualizace
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -69,7 +59,6 @@ function RepoSelector({ onSelectRepo }) {
     }
   };
 
-  // Získání barvy pro programovací jazyk
   const getLanguageColor = (language) => {
     if (!language) return '#8f8f8f';
     

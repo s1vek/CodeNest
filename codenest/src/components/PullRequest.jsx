@@ -1,17 +1,10 @@
-// src/components/PullRequest.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import GitHubService from '../services/github';
 import PullRequestCreator from './PullRequestCreator';
 import './PullRequest.css';
 
-/**
- * Komponenta pro zobrazení a správu pull requestů
- * @param {Object} props - Props komponenty
- * @param {Object} props.repository - Data vybraného repozitáře
- * @returns {JSX.Element} PullRequest komponenta
- */
-function PullRequest({ repository }) {
-  // State pro pull requesty, načítání a chyby
+
+const PullRequest = forwardRef(({ repository }, ref) => {
   const [pullRequests, setPullRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,8 +13,9 @@ function PullRequest({ repository }) {
   const [actionLoading, setActionLoading] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // Definujeme fetchPullRequests pomocí useCallback, aby se netvořila nová instance při každém renderu
   const fetchPullRequests = useCallback(async () => {
+    if (!repository) return;
+    
     try {
       setLoading(true);
       const [owner, repo] = repository.full_name.split('/');
@@ -35,13 +29,18 @@ function PullRequest({ repository }) {
     }
   }, [repository]);
 
-  // Načtení pull requestů při změně repozitáře
-  useEffect(() => {
-    if (!repository) return;
-    fetchPullRequests();
-  }, [repository, fetchPullRequests]);
+  useImperativeHandle(ref, () => ({
+    refresh: () => {
+      setExpandedPR(null);
+      setError(null);
+      fetchPullRequests();
+    }
+  }));
 
-  // Efekt pro automatické skrytí úspěšné zprávy
+  useEffect(() => {
+    fetchPullRequests();
+  }, [fetchPullRequests]);
+
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => {
@@ -51,7 +50,6 @@ function PullRequest({ repository }) {
     }
   }, [successMessage]);
 
-  // Zobrazení/skrytí detailů pull requestu
   const togglePRDetails = (prNumber) => {
     if (expandedPR === prNumber) {
       setExpandedPR(null);
@@ -60,20 +58,15 @@ function PullRequest({ repository }) {
     }
   };
 
-  // Přepínání mezi seznamem PR a vytvářením nového PR
   const toggleCreatePR = () => {
     setIsCreatingPR(!isCreatingPR);
     setExpandedPR(null);
   };
 
-  // Zpracování vytvoření nového PR
   const handlePullRequestCreated = (newPR) => {
-    // Přidáme nový PR do seznamu
     setPullRequests([newPR, ...pullRequests]);
-    // Zůstaneme v režimu vytváření pro případné vytvoření dalšího PR
   };
 
-  // Zavření Pull Requestu
   const handleClosePullRequest = async (pr) => {
     if (!window.confirm(`Opravdu chcete zavřít pull request #${pr.number}?`)) {
       return;
@@ -91,7 +84,6 @@ function PullRequest({ repository }) {
         pr.number
       );
       
-      // Aktualizace PR v seznamu
       setPullRequests(
         pullRequests.map(existingPR => 
           existingPR.number === pr.number ? closedPR : existingPR
@@ -107,7 +99,6 @@ function PullRequest({ repository }) {
     }
   };
 
-  // Formátování data
   const formatDate = (dateString) => {
     const options = {
       year: 'numeric',
@@ -119,7 +110,6 @@ function PullRequest({ repository }) {
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
-  // Získání třídy CSS podle stavu PR
   const getPRStatusClass = (state, merged) => {
     if (merged) return 'status-merged';
     switch (state) {
@@ -129,7 +119,6 @@ function PullRequest({ repository }) {
     }
   };
 
-  // Získání ikony podle stavu PR
   const getPRStatusIcon = (state, merged) => {
     if (merged) {
       return (
@@ -152,7 +141,6 @@ function PullRequest({ repository }) {
     }
   };
 
-  // Získání textu stavu PR
   const getPRStatusText = (state, merged) => {
     if (merged) return 'Merged';
     return state.charAt(0).toUpperCase() + state.slice(1);
@@ -327,6 +315,6 @@ function PullRequest({ repository }) {
       )}
     </div>
   );
-}
+});
 
 export default PullRequest;

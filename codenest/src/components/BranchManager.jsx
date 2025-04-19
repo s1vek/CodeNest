@@ -1,16 +1,8 @@
-// src/components/BranchManager.jsx
+
 import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import GitHubService from '../services/github';
 import './BranchManager.css';
 
-/**
- * Komponenta pro správu větví repozitáře
- * @param {Object} props - Props komponenty
- * @param {Object} props.repository - Data vybraného repozitáře
- * @param {Function} props.onBranchSelect - Callback při výběru větve
- * @param {String} props.currentBranch - Aktuálně vybraná větev
- * @returns {JSX.Element} BranchManager komponenta
- */
 const BranchManager = forwardRef(({ repository, onBranchSelect, currentBranch }, ref) => {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +16,6 @@ const BranchManager = forwardRef(({ repository, onBranchSelect, currentBranch },
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
 
-  // Definujeme fetchBranches pomocí useCallback, aby se netvořila nová instance při každém renderu
   const fetchBranches = useCallback(async () => {
     if (!repository) return;
     
@@ -34,7 +25,6 @@ const BranchManager = forwardRef(({ repository, onBranchSelect, currentBranch },
       const branchesData = await GitHubService.getBranches(owner, repo);
       setBranches(branchesData);
       
-      // Pokud není vybraná větev, nastavíme výchozí
       if (!currentBranch && branchesData.length > 0) {
         const defaultBranch = branchesData.find(branch => branch.name === repository.default_branch) 
           || branchesData[0];
@@ -53,7 +43,6 @@ const BranchManager = forwardRef(({ repository, onBranchSelect, currentBranch },
     }
   }, [repository, currentBranch, onBranchSelect]);
 
-  // Exponujeme metodu refresh přes ref
   useImperativeHandle(ref, () => ({
     refresh: () => {
       setDeleteError(null);
@@ -62,12 +51,11 @@ const BranchManager = forwardRef(({ repository, onBranchSelect, currentBranch },
     }
   }));
 
-  // Načtení větví při změně repozitáře
+
   useEffect(() => {
     fetchBranches();
   }, [fetchBranches]);
 
-  // Efekt pro automatické skrytí úspěšné zprávy
   useEffect(() => {
     if (success) {
       const timer = setTimeout(() => {
@@ -77,7 +65,7 @@ const BranchManager = forwardRef(({ repository, onBranchSelect, currentBranch },
     }
   }, [success]);
 
-  // Zpracování vytvoření nové větve
+
   const handleCreateBranch = async (e) => {
     e.preventDefault();
     
@@ -105,14 +93,12 @@ const BranchManager = forwardRef(({ repository, onBranchSelect, currentBranch },
         baseBranch
       );
       
-      // Refresh branch list
       await fetchBranches();
       
       setSuccess(`Branch "${newBranchName}" created successfully`);
       setNewBranchName('');
       setIsCreatingBranch(false);
-      
-      // Automatically select the new branch
+
       if (onBranchSelect) {
         onBranchSelect(newBranchName.trim());
       }
@@ -125,7 +111,6 @@ const BranchManager = forwardRef(({ repository, onBranchSelect, currentBranch },
     }
   };
 
-  // Funkce pro smazání větve
   const handleDeleteBranch = async (branchName) => {
     try {
       setDeletingBranch(branchName);
@@ -133,13 +118,12 @@ const BranchManager = forwardRef(({ repository, onBranchSelect, currentBranch },
       
       const [owner, repo] = repository.full_name.split('/');
       
-      // Kontrola, zda není větev výchozí
       if (branchName === repository.default_branch) {
         setDeleteError('Cannot delete the default branch');
         return;
       }
       
-      // Kontrola, zda není větev ochráněná
+
       try {
         const isProtected = await GitHubService.isBranchProtected(owner, repo, branchName);
         if (isProtected) {
@@ -150,13 +134,10 @@ const BranchManager = forwardRef(({ repository, onBranchSelect, currentBranch },
         console.log('Protection check error, continuing with delete attempt');
       }
       
-      // Pokus o smazání větve
       await GitHubService.deleteBranch(owner, repo, branchName);
       
-      // Aktualizace seznamu větví
       await fetchBranches();
       
-      // Pokud byla smazána aktuálně vybraná větev, přepneme na výchozí
       if (currentBranch === branchName && onBranchSelect) {
         onBranchSelect(repository.default_branch);
       }
@@ -172,14 +153,12 @@ const BranchManager = forwardRef(({ repository, onBranchSelect, currentBranch },
     }
   };
 
-  // Zobrazení potvrzovacího dialogu pro smazání
   const confirmDeleteBranch = (branchName, e) => {
     e.stopPropagation();
     setDeleteError(null);
     setShowDeleteConfirm(branchName);
   };
 
-  // Zrušení smazání větve
   const cancelDeleteBranch = (e) => {
     e.stopPropagation();
     setShowDeleteConfirm(null);

@@ -1,25 +1,15 @@
-// src/components/Login.jsx
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
-/**
- * Komponenta pro přihlášení přes GitHub token
- * @returns {JSX.Element} Login komponenta
- */
+
 function Login() {
-  // State pro vstupní pole a chyby
   const [username, setUsername] = useState('');
   const [tokenInput, setTokenInput] = useState('');
   const [loginError, setLoginError] = useState('');
   
-  // Přístup k autentizačnímu kontextu
   const { login, error: authError } = useAuth();
 
-  /**
-   * Zpracování přihlášení
-   * @param {Event} e - Submit event
-   */
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -48,7 +38,7 @@ function Login() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Vaše GitHub uživatelské jméno"
+              placeholder="Github username"
             />
           </div>
           
@@ -59,7 +49,7 @@ function Login() {
               type="password"
               value={tokenInput}
               onChange={(e) => setTokenInput(e.target.value)}
-              placeholder="Váš GitHub token"
+              placeholder="Github token"
             />
           </div>
           

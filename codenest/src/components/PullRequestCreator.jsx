@@ -1,16 +1,8 @@
-// src/components/PullRequestCreator.jsx
 import React, { useState, useEffect } from 'react';
 import GitHubService from '../services/github';
 import BranchManager from './BranchManager';
 import './PullRequestCreator.css';
 
-/**
- * Komponenta pro vytváření Pull Requestů
- * @param {Object} props - Props komponenty
- * @param {Object} props.repository - Data vybraného repozitáře
- * @param {Function} props.onPullRequestCreated - Callback po vytvoření PR
- * @returns {JSX.Element} PullRequestCreator komponenta
- */
 function PullRequestCreator({ repository, onPullRequestCreated }) {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -22,7 +14,6 @@ function PullRequestCreator({ repository, onPullRequestCreated }) {
   const [branches, setBranches] = useState([]);
   const [createdPR, setCreatedPR] = useState(null);
 
-  // Načtení větví při změně repozitáře
   useEffect(() => {
     if (!repository) return;
 
@@ -32,7 +23,6 @@ function PullRequestCreator({ repository, onPullRequestCreated }) {
         const branchesData = await GitHubService.getBranches(owner, repo);
         setBranches(branchesData);
         
-        // Nastavení výchozí větve pro cíl PR
         if (branchesData.length > 0) {
           const defaultBranch = repository.default_branch || branchesData[0].name;
           setBaseBranch(defaultBranch);
@@ -46,12 +36,10 @@ function PullRequestCreator({ repository, onPullRequestCreated }) {
     fetchBranches();
   }, [repository]);
 
-  // Nastavení zvolené větve
   const handleBranchSelect = (branch) => {
     setHeadBranch(branch);
   };
 
-  // Odeslání Pull Requestu
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -94,11 +82,9 @@ function PullRequestCreator({ repository, onPullRequestCreated }) {
       setSuccess(`Pull Request #${pullRequest.number} created successfully!`);
       setCreatedPR(pullRequest);
       
-      // Reset form
       setTitle('');
       setBody('');
       
-      // Notify parent component
       if (onPullRequestCreated) {
         onPullRequestCreated(pullRequest);
       }

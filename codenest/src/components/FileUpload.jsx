@@ -3,12 +3,7 @@ import React, { useState, useEffect } from 'react';
 import GitHubService from '../services/github';
 import './FileUpload.css';
 
-/**
- * Komponenta pro nahrávání nových souborů do repozitáře
- * @param {Object} props - Props komponenty
- * @param {Object} props.repository - Data vybraného repozitáře
- * @returns {JSX.Element} FileUpload komponenta
- */
+
 function FileUpload({ repository }) {
   // State pro informace o nahrávaném souboru, cesty a stavu
   const [currentPath, setCurrentPath] = useState('');
