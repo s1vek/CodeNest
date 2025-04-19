@@ -9,6 +9,7 @@ import PullRequest from './components/PullRequest';
 import FileUpload from './components/FileUpload';
 import BranchManager from './components/BranchManager';
 import Issues from './components/Issues';
+import RepoStats from './components/RepoStats';
 import './App.css';
 
 function AppContent() {
@@ -22,6 +23,7 @@ function AppContent() {
   const filesRef = useRef();
   const pullsRef = useRef();
   const issuesRef = useRef();
+  const statsRef = useRef();
 
   const handleSelectRepo = (repo) => {
     setSelectedRepo(repo);
@@ -90,6 +92,15 @@ function AppContent() {
             console.log('✅ Issues refresh called');
           } else {
             console.warn('⚠️ IssuesRef or refresh method not available');
+            fallbackRefresh();
+          }
+          break;
+        case 'stats':
+          if (statsRef.current && statsRef.current.refresh) {
+            statsRef.current.refresh();
+            console.log('✅ Stats refresh called');
+          } else {
+            console.warn('⚠️ StatsRef or refresh method not available');
             fallbackRefresh();
           }
           break;
@@ -172,6 +183,13 @@ function AppContent() {
               <Issues 
                 repository={selectedRepo}
                 ref={issuesRef}
+              />
+            )}
+            
+            {activeTab === 'stats' && (
+              <RepoStats
+                repository={selectedRepo}
+                ref={statsRef}
               />
             )}
           </div>

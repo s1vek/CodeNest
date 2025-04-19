@@ -447,6 +447,94 @@ class GitHubService {
       throw error;
     }
   }
+
+  async getLanguages(owner, repo) {
+    try {
+      const { data } = await this.octokit.repos.listLanguages({
+        owner,
+        repo
+      });
+      return data;
+    } catch (error) {
+      console.error("Error fetching languages:", error);
+      throw error;
+    }
+  }
+  
+  async getContributorsStats(owner, repo) {
+    try {
+      const { data } = await this.octokit.repos.getContributorsStats({
+        owner,
+        repo
+      });
+      
+      if (data === 204 || !data) {
+        throw new Error("GitHub is still generating statistics, please try again later");
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Error fetching contributors stats:", error);
+      throw error;
+    }
+  }
+  
+  async getCommitActivity(owner, repo) {
+    try {
+      const { data } = await this.octokit.repos.getCommitActivityStats({
+        owner,
+        repo
+      });
+      
+      if (data === 204 || !data) {
+        throw new Error("GitHub is still generating statistics, please try again later");
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Error fetching commit activity:", error);
+      throw error;
+    }
+  }
+  
+  async getCodeFrequency(owner, repo) {
+    try {
+      const { data } = await this.octokit.repos.getCodeFrequencyStats({
+        owner,
+        repo
+      });
+      
+      if (data === 204 || !data) {
+        throw new Error("GitHub is still generating statistics, please try again later");
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Error fetching code frequency:", error);
+      throw error;
+    }
+  }
+  
+  async getRepositoryStats(owner, repo) {
+    try {
+      const [languages, contributorsStats, commitActivity, repoData] = await Promise.allSettled([
+        this.getLanguages(owner, repo),
+        this.getContributorsStats(owner, repo),
+        this.getCommitActivity(owner, repo),
+        this.getRepository(owner, repo)
+      ]);
+      
+      return {
+        languages: languages.status === 'fulfilled' ? languages.value : null,
+        contributors: contributorsStats.status === 'fulfilled' ? contributorsStats.value : null,
+        commitActivity: commitActivity.status === 'fulfilled' ? commitActivity.value : null,
+        repoData: repoData.status === 'fulfilled' ? repoData.value : null
+      };
+    } catch (error) {
+      console.error("Error fetching repository statistics:", error);
+      throw error;
+    }
+  }
 }
 
 const githubService = new GitHubService();
