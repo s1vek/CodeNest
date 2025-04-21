@@ -404,6 +404,21 @@ class GitHubService {
     }
   }
 
+  async createRepository(name, description = '', isPrivate = false, autoInit = true) {
+    try {
+      const { data } = await this.octokit.repos.createForAuthenticatedUser({
+        name,
+        description,
+        private: isPrivate,
+        auto_init: autoInit
+      });
+      return data;
+    } catch (error) {
+      console.error("Error creating repository:", error);
+      throw error;
+    }
+  }
+
   async getLabels(owner, repo) {
     try {
       const { data } = await this.octokit.issues.listLabelsForRepo({
